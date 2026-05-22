@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "staff-cost-planner",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "8080", "C:\\Users\\gcarioni\\OneDrive - Nutrition International\\Desktop\\AI Projects\\Staff Cost Calculator"],
+      "port": 8080
+    }
+  ]
+}
