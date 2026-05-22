@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NI Staff Cost Scenario Planner</title>
+<style>
+/* ── NI BRAND TOKENS ── */
+:root {
+  --carmine:    #A4343A;
+  --carmine-dk: #8B2A2E;
+  --charcoal:   #253746;
+  --charcoal-md:#1C2B35;
+  --slate:      #425563;
+  --green-dk:   #005844;
+  --teal:       #00A88A;
+  --blue:       #003087;
+  --gold:       #CC8A00;
+  --bg:         #F0F3F5;
+  --border:     #D4DCE3;
+  --muted:      #6B7E8D;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:var(--bg);color:var(--charcoal);font-size:14px}
+
+/* ── HEADER ── */
+.header{
+  background:var(--charcoal);
+  color:white;
+  padding:0 28px;
+  display:flex;
+  align-items:stretch;
+  justify-content:space-between;
+  border-bottom:4px solid var(--carmine);
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+.header-inner{display:flex;align-items:center;gap:18px;padding:12px 0}
+.header-accent{width:5px;background:var(--carmine);border-radius:3px;align-self:stretch;margin:10px 0}
+.header-left h1{font-size:17px;font-weight:700;letter-spacing:.3px}
+.header-left p{font-size:11px;opacity:.6;margin-top:3px;letter-spacing:.3px;text-transform:uppercase}
+.header-right{display:flex;align-items:center;gap:12px}
+.header-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:4px;padding:5px 12px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.header-sp-link{background:var(--carmine);color:white;border-radius:4px;padding:7px 13px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.3px;display:flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap}
+.header-sp-link:hover{background:var(--carmine-dk)}
+
+/* ── KPI STRIP ── */
+.kpi-strip{
+  background:#fff;
+  display:flex;
+  align-items:stretch;
+  padding:0 20px;
+  gap:0;
+  border-bottom:1px solid var(--border);
+}
+.kpi-tile{
+  flex:1;
+  padding:9px 18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  cursor:pointer;
+  border-right:1px solid var(--border);
+  transition:background .15s;
+  min-width:0;
+}
+.kpi-tile:last-child{flex:0 0 auto;border-right:none;text-align:right}
+.kpi-tile:hover{background:#F8FAFB}
+.kpi-tile .kpi-val{font-size:16px;font-weight:800;letter-spacing:-.5px;font-family:Arial,sans-serif}
+.kpi-tile .kpi-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+.kpi-blue .kpi-val{color:var(--charcoal)}
+.kpi-red  .kpi-val{color:var(--carmine)}
+.kpi-teal .kpi-val{color:var(--green-dk)}
+.kpi-loc  .kpi-val{color:var(--charcoal);font-size:13px}
+.kpi-loc  .kpi-lbl{color:var(--muted)}
+
+/* ── TAB BAR ── */
+.tab-bar{
+  background:#fff;
+  display:flex;
+  padding:0 20px;
+  overflow-x:auto;
+  border-bottom:1px solid var(--border);
+  position:sticky;
+  top:61px;
+  z-index:99;
+}
+.tab-btn{
+  padding:11px 16px;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:12px;
+  font-weight:700;
+  border-bottom:3px solid transparent;
+  white-space:nowrap;
+  transition:all .2s;
+  border:none;
+  border-bottom:3px solid transparent;
+  background:none;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+  font-family:Arial,sans-serif;
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.tab-btn:hover{color:var(--charcoal)}
+.tab-btn.active{color:var(--carmine);border-bottom-color:var(--carmine)}
+.tab-icon{flex-shrink:0}
+
+/* ── PAGES ── */
+.page{display:none;padding:22px;max-width:1320px;margin:0 auto}
+.page.active{display:block}
+
+/* ── GRID ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+
+/* ── CARDS ── */
+.card{background:white;border-radius:6px;padding:22px;box-shadow:0 1px 3px rgba(37,55,70,.08);border:1px solid var(--border)}
+.card-header{font-size:12px;font-weight:700;color:var(--charcoal);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--teal);display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.6px}
+.card-header svg{flex-shrink:0;color:var(--teal)}
+
+/* ── FORM ── */
+.field{margin-bottom:15px}
+.field:last-child{margin-bottom:0}
+label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+input[type="text"],input[type="number"],select{
+  width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:4px;
+  font-size:14px;color:var(--charcoal);background:#FAFBFC;transition:border-color .15s,box-shadow .15s;font-family:Arial,sans-serif;
+  -webkit-appearance:none;appearance:none;
+}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E8D' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px}
+input:focus,select:focus{outline:none;border-color:var(--charcoal);background:white;box-shadow:0 0 0 3px rgba(37,55,70,.08)}
+.hint{font-size:11px;color:var(--muted);margin-top:4px}
+.hint-local{font-size:12px;color:var(--slate);margin-top:5px;padding:5px 9px;background:#F5F7F9;border-radius:4px;border-left:3px solid var(--teal)}
+
+/* ── BAND PICKER CARD ── */
+.band-card{
+  background:#fff;
+  border-radius:8px;
+  padding:24px;
+  margin-bottom:18px;
+  border:1px solid var(--border);
+  border-left:4px solid var(--carmine);
+  box-shadow:0 1px 4px rgba(37,55,70,.06);
+}
+.band-card-title{
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:.8px;
+  text-transform:uppercase;
+  color:var(--carmine);
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.band-row{display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start}
+.band-select-wrap label{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px}
+#bandSelect{
+  background:#FAFBFC;
+  border:1.5px solid var(--border);
+  color:var(--charcoal);
+  padding:10px 32px 10px 12px;
+  border-radius:5px;
+  font-size:14px;
+  width:100%;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B7E8D' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+  -webkit-appearance:none;appearance:none;
+}
+#bandSelect:focus{outline:none;border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(0,168,138,.12)}
+
+.band-viz{flex:1}
+.band-desc{
+  font-size:13px;
+  font-weight:700;
+  color:var(--charcoal);
+  margin-bottom:4px;
+}
+.band-system-note{
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:14px;
+  letter-spacing:.2px;
+}
+
+/* Range bar */
+.range-bar-wrap{position:relative;margin:10px 0 6px}
+.range-track{
+  height:6px;
+  background:var(--border);
+  border-radius:3px;
+  position:relative;
+  overflow:visible;
+}
+.range-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--teal),#00C9A8);
+  border-radius:3px;
+  position:absolute;
+  left:0;
+  transition:width .3s ease;
+}
+.range-marker{
+  position:absolute;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:14px;
+  height:14px;
+  background:white;
+  border:2px solid var(--teal);
+  border-radius:50%;
+  box-shadow:0 1px 4px rgba(0,0,0,.15);
+  transition:left .3s ease;
+  z-index:2;
+}
+.range-labels{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--muted);letter-spacing:.2px}
+
+/* Band stats */
+.band-stats{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+.band-stat{
+  background:#F8FAFB;
+  border:1px solid var(--border);
+  border-radius:5px;
+  padding:8px 14px;
+  flex:1;
+  min-width:80px;
+  text-align:center;
+}
+.band-stat .bs-val{font-size:15px;font-weight:800;color:var(--charcoal);letter-spacing:-.3px}
+.band-stat .bs-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.band-stat.mid-stat{border-color:var(--teal);border-top:2px solid var(--teal)}
+.band-stat.mid-stat .bs-val{color:var(--teal)}
+
+/* Compa badges */
+.band-badges{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.compa-badge{
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.3px;
+}
+.compa-at{background:#D0F3EC;color:#005844;border:1px solid #A0E4D4}
+.compa-above{background:#FDF3D8;color:#7A4800;border:1px solid #F0D898}
+.compa-below{background:#FDF3D8;color:#7A4800;border:1px solid #F0D898}
+.compa-over{background:#FCDCDE;color:#A4343A;border:1px solid #F0B8BC}
+.status-pill{
+  padding:3px 10px;
+  border-radius:3px;
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+.status-within{background:#D0F3EC;color:#005844;border:1px solid #A0E4D4}
+.status-below-min{background:#FDF3D8;color:#7A4800;border:1px solid #F0D898}
+.status-above-max{background:#FCDCDE;color:#A4343A;border:1px solid #F0B8BC}
+
+/* ── ASSUMP GRID ── */
+.assump-grid{display:grid;grid-template-columns:1fr 90px 55px;gap:8px 10px;align-items:center;margin-bottom:9px}
+.assump-grid label{margin-bottom:0;font-size:11px}
+.assump-unit{font-size:11px;color:var(--muted)}
+
+/* ── STAT CHIPS ── */
+.stat-chip{background:white;border-radius:6px;padding:14px 16px;text-align:center;border:1px solid var(--border);border-top:3px solid var(--teal)}
+.sc-val{font-size:20px;font-weight:800;color:var(--charcoal);font-family:Arial,sans-serif}
+.sc-lbl{font-size:10px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.4px}
+
+/* ── HERO BOXES ── */
+.hero{border-radius:6px;padding:18px 22px;margin-bottom:18px;color:white;border-left:6px solid rgba(255,255,255,.25)}
+.hero .amount{font-size:30px;font-weight:800;letter-spacing:-1px}
+.hero .hero-label{font-size:11px;opacity:.75;margin-top:4px;text-transform:uppercase;letter-spacing:.4px}
+.hero-blue {background:var(--charcoal)}
+.hero-red  {background:var(--carmine)}
+.hero-green{background:var(--green-dk)}
+.hero-grid {display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+
+/* ── RESULT ROWS ── */
+.r-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0F3F5}
+.r-row:last-child{border-bottom:none}
+.r-label{color:var(--muted);font-size:13px}
+.r-value{font-weight:700;color:var(--charcoal);font-size:13px}
+.r-row.subtotal{background:#EEF1F3;margin:6px -6px;padding:9px 6px;border-radius:4px;border-left:3px solid var(--teal)}
+.r-row.subtotal .r-label{color:var(--charcoal);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.4px}
+.r-row.subtotal .r-value{color:var(--charcoal);font-size:15px}
+.section-divider{background:var(--bg);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);padding:6px 0 4px;border-bottom:2px solid var(--border);margin-bottom:2px}
+
+/* Band positioning row in Employment tab */
+.band-pos-bar{background:#fff;border-radius:6px;padding:16px 20px;margin-bottom:18px;border:1px solid var(--border);border-left:4px solid var(--teal)}
+.band-pos-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--teal);margin-bottom:10px}
+.band-pos-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.band-pos-info{flex:1;min-width:200px}
+.band-pos-range{flex:2;min-width:200px}
+
+/* ── PILLS ── */
+.pill{display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.pill-green {background:#D4EFE6;color:#005844}
+.pill-orange{background:#FDEFD6;color:#7A4800}
+.pill-red   {background:#FCDCDE;color:#A4343A}
+.pill-teal  {background:#D0F3EC;color:#006B58}
+
+/* ── COMPARISON TABLE ── */
+.cmp-table{width:100%;border-collapse:collapse;font-size:13px}
+.cmp-table th{background:var(--charcoal);color:white;padding:11px 14px;text-align:right;font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.4px}
+.cmp-table th:first-child{text-align:left}
+.cmp-table td{padding:9px 14px;border-bottom:1px solid #EEF1F3;text-align:right}
+.cmp-table td:first-child{text-align:left;color:var(--muted)}
+.cmp-table tr:nth-child(even) td{background:#F8FAFB}
+.cmp-table tr.cmp-section-hdr td{background:#EEF1F3;font-weight:700;color:var(--slate);font-size:11px;text-transform:uppercase;letter-spacing:.6px;border-top:2px solid var(--teal);text-align:left}
+.cmp-table tr.cmp-sub td{background:#EEF1F3;font-weight:700;color:var(--charcoal);border-top:2px solid var(--teal)}
+.cmp-table tr.cmp-grand td{background:var(--charcoal);color:white;font-weight:800;font-size:14px;border:none}
+
+/* ── TIMELINE BAR ── */
+.tl-bar{display:flex;border-radius:4px;overflow:hidden;margin:12px 0;height:40px}
+.tl-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;padding:0 8px;text-align:center;line-height:1.2}
+
+/* ── INFO BAR ── */
+.info-bar{background:#EBF3ED;border-left:4px solid var(--green-dk);border-radius:4px;padding:11px 14px;font-size:13px;color:var(--charcoal);margin-bottom:18px}
+
+/* ── LEAVE TYPE TABS ── */
+.leave-type-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.leave-type-btn{padding:7px 14px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;border:2px solid var(--border);background:white;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-family:Arial,sans-serif}
+.leave-type-btn.active{background:var(--carmine);color:white;border-color:var(--carmine)}
+
+/* ── SP CARD ── */
+.sp-card{background:#F7F0F0;border:1px solid #DFBFBF;border-left:4px solid var(--carmine);border-radius:6px;padding:14px 16px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sp-card-text{font-size:12px;color:var(--charcoal)}
+.sp-card-text strong{display:block;font-weight:700;margin-bottom:2px}
+.sp-card-text span{color:var(--muted);font-size:11px}
+.sp-btn{background:var(--charcoal);color:white;padding:8px 14px;border-radius:4px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;letter-spacing:.3px;display:flex;align-items:center;gap:5px}
+.sp-btn:hover{background:var(--carmine)}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:18px;color:var(--muted);font-size:11px;margin-top:10px;border-top:1px solid var(--border)}
+
+/* ── CONTRIB ROW ── */
+.contrib-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px dashed #EEF1F3;font-size:12px}
+.contrib-row:last-child{border-bottom:none}
+.contrib-name{color:var(--slate);max-width:75%}
+.contrib-rate{color:var(--charcoal);font-weight:700}
+
+@media(max-width:900px){
+  .grid-2,.grid-3,.grid-4,.hero-grid{grid-template-columns:1fr}
+  .band-row{grid-template-columns:1fr}
+  .kpi-strip{flex-wrap:wrap}
+  .kpi-tile{flex:0 0 50%}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-accent"></div>
+    <div class="header-left">
+      <h1>STAFF COST SCENARIO PLANNER</h1>
+      <p>Nutrition International &nbsp;·&nbsp; People &amp; Culture &nbsp;·&nbsp; All NI Office Locations</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <a class="header-sp-link"
+       href="https://nutritionintl.sharepoint.com/sites/M365_PeopleandCulture/Shared%20Documents/Total%20Rewards/Employee%20Compensation/2025%20Salary%20Admin/Jan%202026%20Salary%20Structures%20.xlsx"
+       target="_blank" title="Jan 2026 Salary Structures — SharePoint">
+      <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      2026 Salary Structures
+    </a>
+    <div class="header-badge">FY 2025–26</div>
+  </div>
+</header>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kpi-tile kpi-blue" onclick="showTab('employer')" title="Go to Employment Cost tab">
+    <div class="kpi-val" id="kpi-annual">—</div>
+    <div class="kpi-lbl">Annual Employment Cost</div>
+  </div>
+  <div class="kpi-tile kpi-red" onclick="showTab('replacement')" title="Go to Replacement Cost tab">
+    <div class="kpi-val" id="kpi-replace">—</div>
+    <div class="kpi-lbl">Replacement Cost</div>
+  </div>
+  <div class="kpi-tile kpi-teal" onclick="showTab('leave')" title="Go to Leave Cost tab">
+    <div class="kpi-val" id="kpi-leave">—</div>
+    <div class="kpi-lbl">Leave Cost — 17 wks</div>
+  </div>
+  <div class="kpi-tile kpi-loc">
+    <div class="kpi-val" id="kpi-band-loc">—</div>
+    <div class="kpi-lbl" id="kpi-band-lbl">Select location &amp; band</div>
+  </div>
+</div>
+
+<!-- TAB BAR -->
+<div class="tab-bar" id="tabBar">
+  <button class="tab-btn active" data-tab="setup" onclick="showTab('setup')">
+    <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+    Position Setup
+  </button>
+  <button class="tab-btn" data-tab="employer" onclick="showTab('employer')">
+    <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+    Employment Cost
+  </button>
+  <button class="tab-btn" data-tab="replacement" onclick="showTab('replacement')">
+    <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    Replacement Cost
+  </button>
+  <button class="tab-btn" data-tab="leave" onclick="showTab('leave')">
+    <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Leave Cost
+  </button>
+  <button class="tab-btn" data-tab="compare" onclick="showTab('compare')">
+    <svg class="tab-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    Compare Locations
+  </button>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 1: SETUP -->
+<!-- ============================================================ -->
+<div id="page-setup" class="page active">
+
+  <div class="info-bar">
+    Configure the position below. All inputs feed every calculator across the tool — change them here to update all results instantly. Select a country and band to auto-populate the salary.
+  </div>
+
+  <!-- BAND PICKER CARD (dark, full-width, top) -->
+  <div class="band-card">
+    <div class="band-card-title">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Band / Grade Selection
+    </div>
+    <div class="band-row">
+      <div class="band-select-wrap">
+        <label>Band / BG Level</label>
+        <select id="bandSelect" onchange="onBandChange()">
+          <option value="">— Select a band —</option>
+        </select>
+        <div style="margin-top:8px;font-size:11px;color:rgba(255,255,255,.35)" id="bandSystemNote">Select a location first</div>
+      </div>
+      <div class="band-viz">
+        <div class="band-desc" id="bandDesc">—</div>
+        <div class="band-system-note" id="bandTitleDesc">Select location and band to see details</div>
+        <!-- Range bar -->
+        <div class="range-bar-wrap">
+          <div class="range-track">
+            <div class="range-fill" id="rangeFill" style="width:50%"></div>
+            <div class="range-marker" id="rangeMarker" style="left:50%"></div>
+          </div>
+          <div class="range-labels">
+            <span id="rangeMinLbl">Min</span>
+            <span>Midpoint</span>
+            <span id="rangeMaxLbl">Max</span>
+          </div>
+        </div>
+        <!-- Stats -->
+        <div class="band-stats">
+          <div class="band-stat"><div class="bs-val" id="bsMin">—</div><div class="bs-lbl">Min (USD)</div></div>
+          <div class="band-stat mid-stat"><div class="bs-val" id="bsMid">—</div><div class="bs-lbl">Midpoint (USD)</div></div>
+          <div class="band-stat"><div class="bs-val" id="bsMax">—</div><div class="bs-lbl">Max (USD)</div></div>
+        </div>
+        <!-- Badges -->
+        <div class="band-badges">
+          <span class="compa-badge compa-at" id="compaBadge">Compa-ratio: —</span>
+          <span class="status-pill status-within" id="bandStatusPill">—</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2-column: Position Details + Assumptions -->
+  <div class="grid-2">
+
+    <!-- Position Details -->
+    <div class="card">
+      <div class="card-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Position Details
+      </div>
+      <div class="field">
+        <label>Job Title</label>
+        <input type="text" id="jobTitle" value="Program Officer" oninput="recalcAll()">
+      </div>
+      <div class="field">
+        <label>Primary Location</label>
+        <select id="primaryCountry" onchange="onCountryChange()">
+          <!-- Populated by JS -->
+        </select>
+      </div>
+      <div class="field">
+        <label>Annual Base Salary (USD)</label>
+        <input type="number" id="baseSalaryUSD" value="45000" min="1000" step="500" oninput="onSalaryInput()">
+        <div class="hint-local" id="salaryHintLocal">— local currency equivalent —</div>
+        <div class="hint" id="salaryHintFX"></div>
+      </div>
+      <div class="field">
+        <label>Contract Type</label>
+        <select id="contractType" onchange="recalcAll()">
+          <option value="permanent">Permanent / Ongoing</option>
+          <option value="fixed">Fixed-Term Contract</option>
+          <option value="consultant">Consultant / Contractor</option>
+        </select>
+      </div>
+      <div class="sp-card">
+        <div class="sp-card-text">
+          <strong>
+            <svg style="display:inline;vertical-align:-2px;margin-right:5px" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            2026 Salary Structures
+          </strong>
+          <span>People &amp; Culture SharePoint &middot; Total Rewards &rarr; Employee Compensation &rarr; 2025 Salary Admin</span>
+        </div>
+        <a class="sp-btn"
+           href="https://nutritionintl.sharepoint.com/sites/M365_PeopleandCulture/Shared%20Documents/Total%20Rewards/Employee%20Compensation/2025%20Salary%20Admin/Jan%202026%20Salary%20Structures%20.xlsx"
+           target="_blank">Open
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- Editable Assumptions -->
+    <div class="card">
+      <div class="card-header">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Editable Assumptions
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">These drive all three calculators. Adjust to reflect actual organisation rates.</p>
+      <div class="assump-grid">
+        <label>Recruitment Agency Fee</label>
+        <input type="number" id="agencyFeePct" value="18" min="0" max="40" oninput="recalcAll()">
+        <span class="assump-unit">% salary</span>
+      </div>
+      <div class="assump-grid">
+        <label>Job Advertising Cost</label>
+        <input type="number" id="adCostUSD" value="400" oninput="recalcAll()">
+        <span class="assump-unit">USD</span>
+      </div>
+      <div class="assump-grid">
+        <label>Total Interview Hours</label>
+        <input type="number" id="interviewHours" value="18" oninput="recalcAll()">
+        <span class="assump-unit">hours</span>
+      </div>
+      <div class="assump-grid">
+        <label>Onboarding &amp; Training Cost</label>
+        <input type="number" id="onboardingUSD" value="2000" oninput="recalcAll()">
+        <span class="assump-unit">USD</span>
+      </div>
+      <div class="assump-grid">
+        <label>Ramp-up Period</label>
+        <input type="number" id="rampMonths" value="3" min="1" max="12" oninput="recalcAll()">
+        <span class="assump-unit">months</span>
+      </div>
+      <div class="assump-grid">
+        <label>Productivity During Ramp-up</label>
+        <input type="number" id="rampEfficiency" value="55" min="10" max="90" oninput="recalcAll()">
+        <span class="assump-unit">%</span>
+      </div>
+      <div class="assump-grid">
+        <label>Temp / Backfill Daily Rate</label>
+        <input type="number" id="tempDailyUSD" value="200" oninput="recalcAll()">
+        <span class="assump-unit">USD/day</span>
+      </div>
+      <div class="assump-grid">
+        <label>Knowledge Transfer Loss</label>
+        <input type="number" id="knowledgeLossPct" value="10" min="0" max="30" oninput="recalcAll()">
+        <span class="assump-unit">% salary</span>
+      </div>
+      <hr style="margin:14px 0">
+      <p style="font-size:11px;color:var(--muted)">
+        <strong>Seniority (derived):</strong> <span id="derivedSeniority">—</span>
+        &nbsp;&middot;&nbsp; affects agency fee hint only
+      </p>
+    </div>
+  </div>
+
+  <!-- Bottom KPI chips -->
+  <div class="hero-grid" style="margin-top:18px">
+    <div class="stat-chip"><div class="sc-val" id="chip-annual">—</div><div class="sc-lbl">Annual Employment Cost (USD)</div></div>
+    <div class="stat-chip"><div class="sc-val" id="chip-replace">—</div><div class="sc-lbl">Replacement Cost (USD)</div></div>
+    <div class="stat-chip"><div class="sc-val" id="chip-leave">—</div><div class="sc-lbl">Maternity Leave Cost — 17 wks (USD)</div></div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 2: EMPLOYMENT COST -->
+<!-- ============================================================ -->
+<div id="page-employer" class="page">
+
+  <!-- Band Positioning -->
+  <div class="band-pos-bar" id="empBandBar">
+    <div class="band-pos-title">
+      <svg style="display:inline;vertical-align:-2px;margin-right:5px" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      Band Positioning
+    </div>
+    <div class="band-pos-row">
+      <div class="band-pos-info">
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px" id="empBandTitle">—</div>
+        <div style="display:flex;gap:10px;margin-top:6px;flex-wrap:wrap" id="empBandBadges"></div>
+      </div>
+      <div class="band-pos-range" style="flex:2">
+        <div class="range-bar-wrap">
+          <div class="range-track">
+            <div class="range-fill" id="empRangeFill" style="width:50%"></div>
+            <div class="range-marker" id="empRangeMarker" style="left:50%"></div>
+          </div>
+          <div class="range-labels" style="color:rgba(255,255,255,.4)">
+            <span id="empRangeMin">Min</span>
+            <span>Midpoint</span>
+            <span id="empRangeMax">Max</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="hero hero-blue">
+        <div class="amount" id="emp-hero-total">$0</div>
+        <div class="hero-label">Total Annual Employment Cost (USD) &middot; <span id="emp-hero-country">—</span></div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Annual Cost Breakdown
+        </div>
+        <div class="r-row"><span class="r-label">Base Salary</span><span class="r-value" id="emp-base">—</span></div>
+        <div class="r-row"><span class="r-label">Mandatory Employer Contributions</span><span class="r-value" id="emp-mandatory">—</span></div>
+        <div class="r-row"><span class="r-label">Employer-Sponsored Benefits (est.)</span><span class="r-value" id="emp-benefits">—</span></div>
+        <div class="r-row subtotal"><span class="r-label">Total Annual Employment Cost</span><span class="r-value" id="emp-subtotal">—</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Mandatory Employer Contributions
+        </div>
+        <div id="contrib-list"></div>
+        <div style="margin-top:12px;padding-top:10px;border-top:2px solid var(--teal);display:flex;justify-content:space-between;font-weight:700;font-size:13px">
+          <span style="color:var(--charcoal)">Total Contribution Rate</span>
+          <span id="emp-contrib-pct" style="color:var(--teal)">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Location Context
+        </div>
+        <div class="r-row"><span class="r-label">Country / Office</span><span class="r-value" id="emp-loc">—</span></div>
+        <div class="r-row"><span class="r-label">Region</span><span class="r-value" id="emp-region">—</span></div>
+        <div class="r-row"><span class="r-label">Local Currency</span><span class="r-value" id="emp-currency">—</span></div>
+        <div class="r-row"><span class="r-label">Salary (Local Currency)</span><span class="r-value" id="emp-local-salary">—</span></div>
+        <div class="r-row"><span class="r-label">Cost of Living Index</span><span class="r-value" id="emp-coli">—</span></div>
+        <div class="r-row"><span class="r-label">Benefits Loading</span><span class="r-value" id="emp-benefits-pct">—</span></div>
+        <div class="r-row"><span class="r-label">Notice Period</span><span class="r-value" id="emp-notice">—</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          Monthly &amp; Weekly Cost
+        </div>
+        <div class="r-row"><span class="r-label">Monthly Employment Cost (USD)</span><span class="r-value" id="emp-monthly">—</span></div>
+        <div class="r-row"><span class="r-label">Weekly Employment Cost (USD)</span><span class="r-value" id="emp-weekly">—</span></div>
+        <div class="r-row"><span class="r-label">Daily Employment Cost (USD)</span><span class="r-value" id="emp-daily">—</span></div>
+        <hr>
+        <div class="r-row"><span class="r-label">Monthly Local Currency</span><span class="r-value" id="emp-monthly-local">—</span></div>
+        <div class="r-row"><span class="r-label">Annual Local Currency</span><span class="r-value" id="emp-annual-local">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 3: REPLACEMENT COST -->
+<!-- ============================================================ -->
+<div id="page-replacement" class="page">
+  <div class="grid-2">
+    <div>
+      <div class="hero hero-red">
+        <div class="amount" id="rep-hero-total">$0</div>
+        <div class="hero-label">Total Estimated Replacement Cost (USD)</div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Recruitment &amp; Pre-Hire
+        </div>
+        <div class="r-row"><span class="r-label">Recruitment Agency Fee</span><span class="r-value" id="rep-agency">—</span></div>
+        <div class="r-row"><span class="r-label">Job Advertising &amp; Platforms</span><span class="r-value" id="rep-ads">—</span></div>
+        <div class="r-row"><span class="r-label">Interview &amp; Staff Time Cost</span><span class="r-value" id="rep-interview">—</span></div>
+        <div class="r-row"><span class="r-label">Background Checks (local rate)</span><span class="r-value" id="rep-bgcheck">—</span></div>
+        <div class="r-row subtotal"><span class="r-label">Sub-total: Recruitment</span><span class="r-value" id="rep-recruit-sub">—</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Onboarding &amp; Ramp-up
+        </div>
+        <div class="r-row"><span class="r-label">Onboarding &amp; Training Programme</span><span class="r-value" id="rep-onboard">—</span></div>
+        <div class="r-row"><span class="r-label">Productivity Loss During Ramp-up</span><span class="r-value" id="rep-ramp">—</span></div>
+        <div class="r-row"><span class="r-label">Temporary / Backfill Cover</span><span class="r-value" id="rep-temp">—</span></div>
+        <div class="r-row"><span class="r-label">Knowledge Transfer Loss</span><span class="r-value" id="rep-knowledge">—</span></div>
+        <div class="r-row subtotal"><span class="r-label">Sub-total: Onboarding</span><span class="r-value" id="rep-onboard-sub">—</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Scenario Summary
+        </div>
+        <div class="r-row"><span class="r-label">Base Salary</span><span class="r-value" id="rep-base">—</span></div>
+        <div class="r-row"><span class="r-label">Total Recruitment Sub-total</span><span class="r-value" id="rep-rec-sum">—</span></div>
+        <div class="r-row"><span class="r-label">Total Onboarding Sub-total</span><span class="r-value" id="rep-ob-sum">—</span></div>
+        <div class="r-row subtotal"><span class="r-label">Grand Total Replacement Cost</span><span class="r-value" id="rep-grand">—</span></div>
+        <div class="r-row"><span class="r-label">As % of Annual Salary</span><span class="r-value" id="rep-pct">—</span></div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Replacement Timeline
+        </div>
+        <div class="tl-bar" id="rep-timeline">
+          <div class="tl-seg" style="background:var(--carmine);width:25%">Notice<br>Period</div>
+          <div class="tl-seg" style="background:var(--charcoal);width:35%">Recruitment<br>Process</div>
+          <div class="tl-seg" style="background:var(--slate);width:15%">Onboard</div>
+          <div class="tl-seg" style="background:var(--muted);width:25%">Ramp-up<br>Period</div>
+        </div>
+        <div id="rep-timeline-detail" style="font-size:12px;color:var(--muted);line-height:1.8"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Industry Benchmarks
+        </div>
+        <div class="r-row"><span class="r-label">Junior / Entry (BG-01–06 / Band 1–2)</span><span class="r-value"><span class="pill pill-teal">30–50% salary</span></span></div>
+        <div class="r-row"><span class="r-label">Mid-Level (BG-07–08 / Band 3–5)</span><span class="r-value"><span class="pill pill-green">50–100% salary</span></span></div>
+        <div class="r-row"><span class="r-label">Senior (BG-09–10 / Band 6–7)</span><span class="r-value"><span class="pill pill-orange">100–150% salary</span></span></div>
+        <div class="r-row"><span class="r-label">Director (BG-11–13 / Band 8–10)</span><span class="r-value"><span class="pill pill-red">150–200% salary</span></span></div>
+        <div style="margin-top:10px;padding:10px;background:#F0F3F5;border-radius:4px;font-size:12px;color:var(--muted)">
+          Your estimate: <strong id="rep-benchmark-comparison">—</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 4: LEAVE COST -->
+<!-- ============================================================ -->
+<div id="page-leave" class="page">
+
+  <div class="leave-type-tabs">
+    <button class="leave-type-btn active" onclick="showLeaveType('maternity',this)">Maternity (17 wks)</button>
+    <button class="leave-type-btn" onclick="showLeaveType('parental',this)">Parental Leave</button>
+    <button class="leave-type-btn" onclick="showLeaveType('sick',this)">Sick Leave</button>
+    <button class="leave-type-btn" onclick="showLeaveType('annual',this)">Annual Leave</button>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="hero hero-green">
+        <div class="amount" id="leave-hero-total">$0</div>
+        <div class="hero-label" id="leave-hero-label">Maternity Leave Employer Cost (17 wks) — <span id="leave-hero-country">—</span></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Leave Cost Breakdown
+        </div>
+        <div id="leave-breakdown"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Statutory Leave Entitlements
+        </div>
+        <div id="leave-entitlements"></div>
+        <div style="margin-top:14px;padding:10px;background:#EBF3ED;border-radius:4px;font-size:12px;color:var(--charcoal);border-left:3px solid var(--green-dk)" id="leave-govt-note"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Annual Leave Summary
+        </div>
+        <div class="r-row"><span class="r-label">Statutory Annual Leave</span><span class="r-value" id="leave-annual-days">—</span></div>
+        <div class="r-row"><span class="r-label">Daily Cost (USD)</span><span class="r-value" id="leave-daily-cost">—</span></div>
+        <div class="r-row"><span class="r-label">Total Annual Leave Cost (USD)</span><span class="r-value" id="leave-annual-cost">—</span></div>
+        <div class="r-row"><span class="r-label">Sick Leave Entitlement</span><span class="r-value" id="leave-sick-days">—</span></div>
+        <div class="r-row"><span class="r-label">Sick Leave Cost (est. 30% utilisation)</span><span class="r-value" id="leave-sick-cost">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB 5: COMPARE LOCATIONS -->
+<!-- ============================================================ -->
+<div id="page-compare" class="page">
+  <div class="info-bar">
+    Comparing all 11 NI office locations at the same salary and assumptions. Band data shown uses each country's midpoint for the nearest equivalent grade. All values in USD.
+  </div>
+
+  <div class="card" style="overflow-x:auto">
+    <div class="card-header">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Multi-Location Cost Comparison — USD
+    </div>
+    <table class="cmp-table" id="cmpTable">
+      <thead>
+        <tr>
+          <th style="text-align:left">Location</th>
+          <th>Band / Grade</th>
+          <th>Annual Salary</th>
+          <th>Employer Contribs</th>
+          <th>Benefits</th>
+          <th>Employment Cost</th>
+          <th>Replacement Cost</th>
+          <th>Leave Cost (17w)</th>
+          <th>COLI Index</th>
+        </tr>
+      </thead>
+      <tbody id="cmpBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  Sources: Birches Group Country Pay Surveys (2024–25) &nbsp;·&nbsp; NI Band Structure (Jan 2026, Ontario, 50th percentile) &nbsp;·&nbsp;
+  Statutory labour codes for each country &nbsp;·&nbsp; NUMBEO Cost of Living indices 2025 &nbsp;·&nbsp;
+  FX rates are indicative (Apr 2025). For final budgets use treasury / Finance rates.
+  <br>
+  <span style="opacity:.6">People &amp; Culture &mdash; Total Rewards &nbsp;|&nbsp; Nutrition International &nbsp;|&nbsp; "Nourish Life."</span>
+</div>
+
+<script>
+/* ========================================================
+   DATA
+   ======================================================== */
+
+const BANDS = {
+  'Canada': {
+    system:'NI Band', currency:'CAD', fx:0.74,
+    note:'10-band structure · Ontario market · 50th percentile',
+    grades:[
+      {id:'Band-1', label:'Band 1',  min:42809,  mid:53512,  max:64214,  title:'Entry Level / Administrative'},
+      {id:'Band-2', label:'Band 2',  min:48904,  mid:61130,  max:73356,  title:'Coordinator / Program Assistant'},
+      {id:'Band-3', label:'Band 3',  min:55866,  mid:69833,  max:83799,  title:'Officer / Specialist'},
+      {id:'Band-4', label:'Band 4',  min:63819,  mid:79774,  max:95729,  title:'Senior Officer / Senior Specialist'},
+      {id:'Band-5', label:'Band 5',  min:72905,  mid:91131,  max:109358, title:'Advisor / Team Lead'},
+      {id:'Band-6', label:'Band 6',  min:83284,  mid:104105, max:124926, title:'Manager / Senior Advisor'},
+      {id:'Band-7', label:'Band 7',  min:95141,  mid:118926, max:142711, title:'Senior Manager / Principal'},
+      {id:'Band-8', label:'Band 8',  min:108685, mid:135857, max:163028, title:'Director'},
+      {id:'Band-9', label:'Band 9',  min:124158, mid:155198, max:186238, title:'Senior Director'},
+      {id:'Band-10',label:'Band 10', min:141834, mid:177293, max:212751, title:'VP / Executive Director'},
+    ]
+  },
+  'Kenya': {
+    system:'BG', currency:'KES', fx:0.0077,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-05',label:'BG-05',min:1473370,  mid:2036885,  max:2600400,  title:'Administrative / Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:2111866,  mid:2823273,  max:3534680,  title:'Coordinator / Officer'},
+      {id:'BG-07',label:'BG-07',min:2679319,  mid:3566860,  max:4454400,  title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:3453364,  mid:4667036,  max:5880708,  title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:4061503,  mid:5259507,  max:6457511,  title:'Manager / Senior Specialist'},
+      {id:'BG-10',label:'BG-10',min:5440620,  mid:6925935,  max:8411250,  title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:7326120,  mid:9757150,  max:12188179, title:'Head of Unit / Senior Advisor'},
+      {id:'BG-12',label:'BG-12',min:8895770,  mid:11850985, max:14806199, title:'Director / Country Director'},
+      {id:'BG-13',label:'BG-13',min:13790263, mid:15396270, max:17002276, title:'Regional Director'},
+    ]
+  },
+  'Ethiopia': {
+    system:'BG', currency:'ETB', fx:0.0088,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-01',label:'BG-01',min:120359,  mid:163153,  max:205947,  title:'Support / Entry Level'},
+      {id:'BG-02',label:'BG-02',min:196709,  mid:264039,  max:331368,  title:'Administrative'},
+      {id:'BG-05',label:'BG-05',min:392160,  mid:552716,  max:713272,  title:'Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:538272,  mid:737256,  max:936240,  title:'Coordinator / Officer'},
+      {id:'BG-07',label:'BG-07',min:670477,  mid:928245,  max:1186013, title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:755484,  mid:1214587, max:1673690, title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:1049818, mid:1376313, max:1702808, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:1394034, mid:1893586, max:2393137, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:2068689, mid:2807018, max:3545346, title:'Head of Unit / Director'},
+      {id:'BG-12',label:'BG-12',min:3170454, mid:4140526, max:5110598, title:'Country Director'},
+    ]
+  },
+  'Nigeria': {
+    system:'BG', currency:'NGN', fx:0.00065,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-05',label:'BG-05',min:4072800,  mid:5510341,  max:6947882,  title:'Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:6130800,  mid:7839044,  max:9547288,  title:'Coordinator / Officer'},
+      {id:'BG-07',label:'BG-07',min:6241342,  mid:8908071,  max:11574800, title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:7999010,  mid:11861597, max:15724185, title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:10000020, mid:13333360, max:16666700, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:14810351, mid:18060726, max:21311102, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:21091571, mid:27432182, max:33772794, title:'Head of Unit / Director'},
+      {id:'BG-12',label:'BG-12',min:29169506, mid:36434361, max:43699216, title:'Country Director'},
+    ]
+  },
+  'Senegal': {
+    system:'BG', currency:'XOF', fx:0.00163,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-01',label:'BG-01',min:2561142,  mid:3494557,  max:4427972,  title:'Support Staff'},
+      {id:'BG-02',label:'BG-02',min:3816228,  mid:5264982,  max:6713736,  title:'Administrative'},
+      {id:'BG-03',label:'BG-03',min:5396919,  mid:8311938,  max:10996784, title:'Junior Officer'},
+      {id:'BG-04',label:'BG-04',min:6552589,  mid:9322245,  max:13008045, title:'Officer'},
+      {id:'BG-05',label:'BG-05',min:9106404,  mid:12090594, max:15074784, title:'Programme Officer'},
+      {id:'BG-06',label:'BG-06',min:12462756, mid:16712736, max:20962716, title:'Senior Officer'},
+      {id:'BG-07',label:'BG-07',min:15075900, mid:19719750, max:24363600, title:'Specialist / Team Lead'},
+      {id:'BG-08',label:'BG-08',min:19691040, mid:26544114, max:33397188, title:'Senior Specialist / Manager'},
+      {id:'BG-09',label:'BG-09',min:21646356, mid:29409270, max:37172184, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:29189127, mid:36336856, max:43484584, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:37967696, mid:52638884, max:67310072, title:'Head of Unit'},
+      {id:'BG-12',label:'BG-12',min:51609876, mid:68391842, max:85173808, title:'Country Director'},
+    ]
+  },
+  'Tanzania': {
+    system:'BG', currency:'TZS', fx:0.00039,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-01',label:'BG-01',min:8172456,   mid:10928754,  max:13685052,  title:'Support Staff'},
+      {id:'BG-02',label:'BG-02',min:13868453,  mid:18291247,  max:22714040,  title:'Administrative'},
+      {id:'BG-03',label:'BG-03',min:16978836,  mid:20630704,  max:28370900,  title:'Junior Officer'},
+      {id:'BG-04',label:'BG-04',min:19639610,  mid:28707005,  max:38507880,  title:'Officer'},
+      {id:'BG-05',label:'BG-05',min:27279812,  mid:35376606,  max:43473400,  title:'Programme Officer'},
+      {id:'BG-06',label:'BG-06',min:38589000,  mid:55474500,  max:72360000,  title:'Senior Officer'},
+      {id:'BG-07',label:'BG-07',min:45054240,  mid:61681130,  max:78308019,  title:'Specialist / Team Lead'},
+      {id:'BG-08',label:'BG-08',min:56004256,  mid:77619664,  max:99235072,  title:'Senior Specialist / Manager'},
+      {id:'BG-09',label:'BG-09',min:70928088,  mid:97562704,  max:124197320, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:98964056,  mid:132582400, max:166200744, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:135960000, mid:183937992, max:231915984, title:'Head of Unit'},
+      {id:'BG-12',label:'BG-12',min:175003645, mid:231758013, max:288512381, title:'Country Director'},
+    ]
+  },
+  'India': {
+    system:'BG', currency:'INR', fx:0.012,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-05',label:'BG-05',min:633947,  mid:808704,  max:983460,  title:'Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:718391,  mid:973363,  max:1228335, title:'Officer / Coordinator'},
+      {id:'BG-07',label:'BG-07',min:945000,  mid:1226475, max:1507950, title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:955882,  mid:1327941, max:1699999, title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:1335116, mid:1911848, max:2488580, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:1960900, mid:2614550, max:3268200, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:2815331, mid:4398578, max:5981825, title:'Head of Unit / Director'},
+      {id:'BG-12',label:'BG-12',min:4125930, mid:5842005, max:7558080, title:'Country / Regional Director'},
+      {id:'BG-13',label:'BG-13',min:6845084, mid:7721969, max:8598854, title:'Regional Director'},
+    ]
+  },
+  'Bangladesh': {
+    system:'BG', currency:'BDT', fx:0.0091,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-05',label:'BG-05',min:514788,  mid:750711,  max:986633,  title:'Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:742875,  mid:1069832, max:1396788, title:'Officer / Coordinator'},
+      {id:'BG-07',label:'BG-07',min:988082,  mid:1306665, max:1625248, title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:1455648, mid:2062938, max:2670228, title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:1384916, mid:2037910, max:2690904, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:2100000, mid:2850000, max:3600000, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:3698696, mid:4753087, max:5807478, title:'Head of Unit / Director'},
+      {id:'BG-12',label:'BG-12',min:4324773, mid:6207677, max:8090580, title:'Country Director'},
+    ]
+  },
+  'Indonesia': {
+    system:'BG', currency:'IDR', fx:0.000062,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-05',label:'BG-05',min:113105950, mid:158552975, max:204000000,  title:'Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:162792000, mid:229144090, max:295496192,  title:'Officer / Coordinator'},
+      {id:'BG-07',label:'BG-07',min:213060000, mid:309738608, max:406417216,  title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:224453328, mid:345341272, max:466229216,  title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:320583232, mid:448454528, max:576325824,  title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:422181952, mid:620602784, max:819023616,  title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:758400000, mid:963132288, max:1167864576, title:'Head of Unit / Director'},
+      {id:'BG-12',label:'BG-12',min:790286040, mid:919494504, max:1048702968, title:'Country Director'},
+    ]
+  },
+  'Pakistan': {
+    system:'BG', currency:'PKR', fx:0.0036,
+    note:'Birches Group · October 2024',
+    grades:[
+      {id:'BG-05',label:'BG-05',min:1132118, mid:1451751, max:1771384, title:'Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:1693301, mid:2202641, max:2711981, title:'Officer / Coordinator'},
+      {id:'BG-07',label:'BG-07',min:1986330, mid:2672666, max:3359002, title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:2100000, mid:3040163, max:3980325, title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:3365546, mid:4487466, max:5609386, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:4842404, mid:6224632, max:7606860, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:8343789, mid:11966920, max:15590050, title:'Head of Unit / Director'},
+      {id:'BG-12',label:'BG-12',min:14325360, mid:17676011, max:21026662, title:'Country Director'},
+    ]
+  },
+  'Philippines': {
+    system:'BG', currency:'PHP', fx:0.018,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-05',label:'BG-05',min:451293, mid:603463, max:755633,  title:'Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:568780, mid:794368, max:1019955, title:'Officer / Coordinator'},
+      {id:'BG-07',label:'BG-07',min:719280, mid:1032660,max:1346040, title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:884644, mid:1308505,max:1732366, title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:1156328,mid:1648607,max:2140885, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:1591589,mid:2107140,max:2622690, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:2041808,mid:3078004,max:4114200, title:'Head of Unit / Director'},
+      {id:'BG-12',label:'BG-12',min:3589898,mid:4440949,max:5292000, title:'Country Director'},
+    ]
+  }
+};
+
+const C = {
+  'Canada':      {flag:'🇨🇦',region:'Americas (HQ)',      city:'Ottawa',         currency:'CAD',fx:0.74,     contribs:{'CPP — Canada Pension Plan':5.95,'Employment Insurance (EI)':2.32},                                                                                              benefits:7.0,  bgCheckUSD:250, govtLeavePct:55, noticeDays:60,  coli:100, leave:{maternity:17,parental:63,sick:10,annual:15,longService:0}},
+  'Kenya':       {flag:'🇰🇪',region:'Africa',              city:'Nairobi',        currency:'KES',fx:0.0077,   contribs:{'NSSF':2.0,'SHIF — Social Health Insurance':2.75,'National Housing Development Fund':1.5},                                                                       benefits:4.0,  bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:42,  leave:{maternity:13,parental:2,sick:30,annual:21,longService:0}},
+  'Ethiopia':    {flag:'🇪🇹',region:'Africa',              city:'Addis Ababa',    currency:'ETB',fx:0.0088,   contribs:{'Pension — Employer Contribution':11.0},                                                                                                                           benefits:3.0,  bgCheckUSD:60,  govtLeavePct:0,  noticeDays:30,  coli:28,  leave:{maternity:13,parental:0,sick:6,annual:16,longService:0}},
+  'Nigeria':     {flag:'🇳🇬',region:'Africa',              city:'Abuja',          currency:'NGN',fx:0.00065,  contribs:{'Pension — Pension Reform Act':10.0,'NSITF — Work Injury Insurance':1.0,'ITF — Industrial Training Fund':1.0},                                                   benefits:4.5,  bgCheckUSD:70,  govtLeavePct:0,  noticeDays:30,  coli:30,  leave:{maternity:12,parental:0,sick:12,annual:21,longService:0}},
+  'Senegal':     {flag:'🇸🇳',region:'Africa (Sahel)',      city:'Dakar',          currency:'XOF',fx:0.00163,  contribs:{'IPRES — Pension (General Regime)':8.4,'IPRES — Pension (Executive Regime)':5.6,'CSS — Health & Workplace Accident':7.0,'Family Allowance Fund':7.0},           benefits:3.0,  bgCheckUSD:70,  govtLeavePct:0,  noticeDays:30,  coli:38,  leave:{maternity:14,parental:0,sick:6,annual:24,longService:0}},
+  'Tanzania':    {flag:'🇹🇿',region:'Africa',              city:'Dar es Salaam',  currency:'TZS',fx:0.00039,  contribs:{'NSSF — National Social Security Fund':10.0,'SDL — Skills Development Levy':4.5},                                                                                benefits:3.5,  bgCheckUSD:70,  govtLeavePct:0,  noticeDays:28,  coli:32,  leave:{maternity:13,parental:0,sick:126,annual:28,longService:0}},
+  'India':       {flag:'🇮🇳',region:'Asia (Regional HQ)',  city:'New Delhi',      currency:'INR',fx:0.012,    contribs:{"EPF — Employees' Provident Fund":12.0,"ESI — Employees' State Insurance":3.25,'Gratuity Statutory Provision':4.81},                                              benefits:3.5,  bgCheckUSD:100, govtLeavePct:0,  noticeDays:60,  coli:35,  leave:{maternity:26,parental:0.5,sick:15,annual:15,longService:0}},
+  'Bangladesh':  {flag:'🇧🇩',region:'Asia',                city:'Dhaka',          currency:'BDT',fx:0.0091,   contribs:{'Provident Fund — Employer Contribution':10.0,'Gratuity Statutory Provision':4.17},                                                                              benefits:2.5,  bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:26,  leave:{maternity:16,parental:0,sick:14,annual:10,longService:0}},
+  'Indonesia':   {flag:'🇮🇩',region:'Asia',                city:'Jakarta',        currency:'IDR',fx:0.000062, contribs:{'BPJS JHT — Old Age Security':3.7,'BPJS JP — Pension':2.0,'BPJS Kesehatan — Health':4.0,'BPJS JKK — Work Injury':0.5,'BPJS JK — Life Insurance':0.3},          benefits:3.0,  bgCheckUSD:90,  govtLeavePct:0,  noticeDays:30,  coli:33,  leave:{maternity:13,parental:0,sick:30,annual:12,longService:0}},
+  'Pakistan':    {flag:'🇵🇰',region:'Asia',                city:'Islamabad',      currency:'PKR',fx:0.0036,   contribs:{'EOBI — Old-Age Benefit Institution':5.0,'ESSI — Social Security (Health)':6.0},                                                                                benefits:3.0,  bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:24,  leave:{maternity:12,parental:0,sick:10,annual:14,longService:0}},
+  'Philippines': {flag:'🇵🇭',region:'Asia',                city:'Manila',         currency:'PHP',fx:0.018,    contribs:{'SSS — Social Security System':9.5,'PhilHealth — Health Insurance':2.5,'Pag-IBIG — Housing Fund':2.0},                                                           benefits:3.5,  bgCheckUSD:90,  govtLeavePct:80, noticeDays:30,  coli:37,  leave:{maternity:10.5,parental:1.75,sick:5,annual:5,longService:0}},
+};
+
+/* ========================================================
+   STATE
+   ======================================================== */
+let state = {
+  country: 'Canada',
+  bandId: 'Band-5',
+  salary: 91131,
+  currentLeaveType: 'maternity'
+};
+
+/* ========================================================
+   HELPERS
+   ======================================================== */
+function usd(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+function pct(n){ return n.toFixed(1) + '%'; }
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+
+function getBandUSD(countryName, gradeId){
+  const bd = BANDS[countryName];
+  if(!bd) return null;
+  const g = bd.grades.find(g => g.id === gradeId);
+  if(!g) return null;
+  return { minUSD: g.min * bd.fx, midUSD: g.mid * bd.fx, maxUSD: g.max * bd.fx, title: g.title, label: g.label };
+}
+
+function getCompaRatio(salaryUSD, countryName, gradeId){
+  const b = getBandUSD(countryName, gradeId);
+  if(!b) return null;
+  return salaryUSD / b.midUSD;
+}
+
+function getBandPosition(salaryUSD, minUSD, maxUSD){
+  return clamp((salaryUSD - minUSD) / (maxUSD - minUSD) * 100, 0, 100);
+}
+
+function deriveSeniority(countryName, gradeId){
+  if(!gradeId) return 'mid';
+  const country = C[countryName];
+  if(!country) return 'mid';
+  if(countryName === 'Canada'){
+    const num = parseInt(gradeId.replace('Band-',''));
+    if(num <= 2) return 'junior';
+    if(num <= 5) return 'mid';
+    if(num <= 7) return 'senior';
+    return 'director';
+  }
+  // BG system
+  const num = parseInt(gradeId.replace('BG-',''));
+  if(num <= 6) return 'junior';
+  if(num <= 8) return 'mid';
+  if(num <= 10) return 'senior';
+  return 'director';
+}
+
+function seniorityLabel(s){
+  return {junior:'Junior (BG-01–06 / Band 1–2)', mid:'Mid-Level (BG-07–08 / Band 3–5)', senior:'Senior / Specialist (BG-09–10 / Band 6–7)', director:'Director (BG-11–13 / Band 8–10)'}[s] || s;
+}
+
+function defaultAgencyFee(seniority){
+  return {junior:15, mid:18, senior:22, director:25}[seniority] || 18;
+}
+
+function calcEmployment(country, salaryUSD){
+  const cd = C[country];
+  if(!cd) return {};
+  const totalContribPct = Object.values(cd.contribs).reduce((a,b)=>a+b, 0);
+  const contribUSD = salaryUSD * totalContribPct / 100;
+  const benefitsUSD = salaryUSD * cd.benefits / 100;
+  const total = salaryUSD + contribUSD + benefitsUSD;
+  return { salaryUSD, contribUSD, benefitsUSD, total, totalContribPct, cd };
+}
+
+function calcReplacement(country, salaryUSD){
+  const cd = C[country];
+  const emp = calcEmployment(country, salaryUSD);
+  const agencyFee   = salaryUSD * (parseFloat(document.getElementById('agencyFeePct').value)||18) / 100;
+  const adCost      = parseFloat(document.getElementById('adCostUSD').value)||400;
+  const intHours    = parseFloat(document.getElementById('interviewHours').value)||18;
+  const onboard     = parseFloat(document.getElementById('onboardingUSD').value)||2000;
+  const rampMos     = parseFloat(document.getElementById('rampMonths').value)||3;
+  const rampEff     = parseFloat(document.getElementById('rampEfficiency').value)||55;
+  const tempDaily   = parseFloat(document.getElementById('tempDailyUSD').value)||200;
+  const kLoss       = salaryUSD * (parseFloat(document.getElementById('knowledgeLossPct').value)||10) / 100;
+
+  const dailyEmp    = emp.total / 260;
+  const interviewCost = dailyEmp * (intHours / 8);
+  const bgCheck     = cd.bgCheckUSD;
+  const prodLoss    = emp.total * (rampMos/12) * ((100-rampEff)/100);
+  const noticeDays  = cd.noticeDays;
+  const tempCover   = tempDaily * noticeDays;
+
+  const recSub  = agencyFee + adCost + interviewCost + bgCheck;
+  const obSub   = onboard + prodLoss + tempCover + kLoss;
+  const total   = recSub + obSub;
+
+  return {agencyFee, adCost, interviewCost, bgCheck, onboard, prodLoss, tempCover, kLoss,
+          recSub, obSub, total, noticeDays, rampMos, tempDaily};
+}
+
+function calcLeave(country, salaryUSD, leaveType){
+  const cd = C[country];
+  const lv = cd.leave;
+  const weeklyGross = salaryUSD / 52;
+  const dailyCost   = salaryUSD / 260;
+  const govtPct     = cd.govtLeavePct / 100;
+  const employerPct = 1 - govtPct;
+  const weeks       = lv[leaveType] || 0;
+  const govtPayment = weeklyGross * weeks * govtPct;
+  const empCost     = weeklyGross * weeks * employerPct;
+  const annualLeaveCost = dailyCost * lv.annual;
+  const sickCost    = dailyCost * lv.sick * 0.3;
+  return { weeks, weeklyGross, govtPayment, empCost, lv, dailyCost, annualLeaveCost, sickCost };
+}
+
+/* ========================================================
+   BAND PICKER
+   ======================================================== */
+function buildBandDropdown(countryName){
+  const sel = document.getElementById('bandSelect');
+  const bd  = BANDS[countryName];
+  sel.innerHTML = '';
+  if(!bd){ sel.innerHTML = '<option>— no band data —</option>'; return; }
+  bd.grades.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g.id;
+    opt.textContent = `${g.label} — ${g.title}`;
+    sel.appendChild(opt);
+  });
+  // Pick default
+  const defId = countryName === 'Canada' ? 'Band-5' : 'BG-09';
+  const hasDefault = bd.grades.some(g => g.id === defId);
+  const fallback = bd.grades[Math.floor(bd.grades.length/2)].id;
+  sel.value = hasDefault ? defId : fallback;
+  state.bandId = sel.value;
+}
+
+function updateBandViz(countryName, gradeId, salaryUSD){
+  const bd = BANDS[countryName];
+  if(!bd || !gradeId) return;
+  const b = getBandUSD(countryName, gradeId);
+  if(!b) return;
+
+  // System note
+  document.getElementById('bandSystemNote').textContent = bd.note;
+
+  // Desc
+  const grade = bd.grades.find(g => g.id === gradeId);
+  document.getElementById('bandDesc').textContent = `${grade.label} — ${grade.title}`;
+  document.getElementById('bandTitleDesc').textContent = `${bd.system === 'NI Band' ? 'NI Band' : 'Birches Group'} · ${bd.currency} · Converted to USD at ${bd.fx} rate`;
+
+  // Stats
+  document.getElementById('bsMin').textContent = usd(b.minUSD);
+  document.getElementById('bsMid').textContent = usd(b.midUSD);
+  document.getElementById('bsMax').textContent = usd(b.maxUSD);
+  document.getElementById('rangeMinLbl').textContent = usd(b.minUSD);
+  document.getElementById('rangeMaxLbl').textContent = usd(b.maxUSD);
+
+  // Bar position
+  const pos = getBandPosition(salaryUSD, b.minUSD, b.maxUSD);
+  document.getElementById('rangeFill').style.width = pos + '%';
+  document.getElementById('rangeMarker').style.left = pos + '%';
+
+  // Compa-ratio
+  const cr = salaryUSD / b.midUSD;
+  const compaBadge = document.getElementById('compaBadge');
+  compaBadge.textContent = `Compa-ratio: ${cr.toFixed(2)}`;
+  compaBadge.className = 'compa-badge';
+  if(cr >= 0.95 && cr <= 1.05) compaBadge.classList.add('compa-at');
+  else if(cr > 1.20 || cr < 0.80) compaBadge.classList.add('compa-over');
+  else if(cr > 1.05) compaBadge.classList.add('compa-above');
+  else compaBadge.classList.add('compa-below');
+
+  // Status pill
+  const pill = document.getElementById('bandStatusPill');
+  if(salaryUSD < b.minUSD){ pill.textContent = 'Below Minimum'; pill.className = 'status-pill status-below-min'; }
+  else if(salaryUSD > b.maxUSD){ pill.textContent = 'Exceeds Maximum'; pill.className = 'status-pill status-above-max'; }
+  else { pill.textContent = 'Within Band'; pill.className = 'status-pill status-within'; }
+}
+
+/* ========================================================
+   EVENT HANDLERS
+   ======================================================== */
+function onCountryChange(){
+  const country = document.getElementById('primaryCountry').value;
+  state.country = country;
+  buildBandDropdown(country);
+  // Auto-fill salary to midpoint of default band
+  const newBandId = document.getElementById('bandSelect').value;
+  state.bandId = newBandId;
+  const b = getBandUSD(country, newBandId);
+  if(b){
+    document.getElementById('baseSalaryUSD').value = Math.round(b.midUSD);
+    state.salary = b.midUSD;
+  }
+  recalcAll();
+}
+
+function onBandChange(){
+  const country = document.getElementById('primaryCountry').value;
+  const bandId  = document.getElementById('bandSelect').value;
+  state.bandId  = bandId;
+  const b = getBandUSD(country, bandId);
+  if(b){
+    document.getElementById('baseSalaryUSD').value = Math.round(b.midUSD);
+    state.salary = b.midUSD;
+  }
+  recalcAll();
+}
+
+function onSalaryInput(){
+  state.salary = parseFloat(document.getElementById('baseSalaryUSD').value) || 0;
+  // Update band viz without changing selected band
+  updateBandViz(state.country, state.bandId, state.salary);
+  recalcAll();
+}
+
+/* ========================================================
+   MAIN RECALC
+   ======================================================== */
+function recalcAll(){
+  const country  = document.getElementById('primaryCountry').value;
+  const salary   = parseFloat(document.getElementById('baseSalaryUSD').value) || 0;
+  const bandId   = state.bandId;
+  state.country  = country;
+  state.salary   = salary;
+  const cd = C[country];
+  if(!cd) return;
+
+  // Derived seniority
+  const seniority = deriveSeniority(country, bandId);
+  document.getElementById('derivedSeniority').textContent = seniorityLabel(seniority);
+
+  // Salary hint
+  const localVal = salary / cd.fx;
+  document.getElementById('salaryHintLocal').textContent =
+    `≈ ${cd.currency} ${Math.round(localVal).toLocaleString('en-US')} at indicative rate (1 USD = ${(1/cd.fx).toFixed(2)} ${cd.currency})`;
+  document.getElementById('salaryHintFX').textContent =
+    `Exchange rate for reference only. Use Finance treasury rate for budgets.`;
+
+  // Band viz
+  updateBandViz(country, bandId, salary);
+
+  // KPI strip band/loc tile
+  const grade = BANDS[country] ? BANDS[country].grades.find(g => g.id === bandId) : null;
+  document.getElementById('kpi-band-loc').textContent =
+    (grade ? grade.label : '—') + ' · ' + cd.flag + ' ' + country;
+  document.getElementById('kpi-band-lbl').textContent = grade ? grade.title : 'No band selected';
+
+  // Calculations
+  const emp = calcEmployment(country, salary);
+  const rep = calcReplacement(country, salary);
+  const lv  = calcLeave(country, salary, 'maternity');
+
+  const annualCost   = emp.total;
+  const replaceCost  = rep.total;
+  const leaveCost    = lv.empCost;
+
+  // KPI strip
+  document.getElementById('kpi-annual').textContent  = usd(annualCost);
+  document.getElementById('kpi-replace').textContent = usd(replaceCost);
+  document.getElementById('kpi-leave').textContent   = usd(leaveCost);
+
+  // Setup chips
+  document.getElementById('chip-annual').textContent  = usd(annualCost);
+  document.getElementById('chip-replace').textContent = usd(replaceCost);
+  document.getElementById('chip-leave').textContent   = usd(leaveCost);
+
+  // Employment tab
+  renderEmploymentTab(country, salary, emp);
+
+  // Replacement tab
+  renderReplacementTab(country, salary, rep);
+
+  // Leave tab
+  renderLeaveTab(country, salary, state.currentLeaveType);
+
+  // Compare tab
+  renderCompareTab(salary);
+}
+
+/* ========================================================
+   RENDER: EMPLOYMENT TAB
+   ======================================================== */
+function renderEmploymentTab(country, salary, emp){
+  const cd = emp.cd;
+  setText('emp-hero-total', usd(emp.total));
+  setText('emp-hero-country', cd.flag + ' ' + country + ' · ' + cd.city);
+
+  setText('emp-base',     usd(salary));
+  setText('emp-mandatory',usd(emp.contribUSD));
+  setText('emp-benefits', usd(emp.benefitsUSD));
+  setText('emp-subtotal', usd(emp.total));
+
+  setText('emp-loc',          cd.flag + ' ' + country);
+  setText('emp-region',       cd.region);
+  setText('emp-currency',     cd.currency);
+  setText('emp-local-salary', cd.currency + ' ' + Math.round(salary/cd.fx).toLocaleString());
+  setText('emp-coli',         cd.coli + ' (Canada = 100)');
+  setText('emp-benefits-pct', cd.benefits + '% of base salary');
+  setText('emp-notice',       cd.noticeDays + ' days statutory');
+
+  setText('emp-monthly',      usd(emp.total/12));
+  setText('emp-weekly',       usd(emp.total/52));
+  setText('emp-daily',        usd(emp.total/260));
+  setText('emp-monthly-local',cd.currency + ' ' + Math.round((salary/cd.fx)/12).toLocaleString());
+  setText('emp-annual-local', cd.currency + ' ' + Math.round(salary/cd.fx).toLocaleString());
+
+  // Contrib list
+  const cl = document.getElementById('contrib-list');
+  cl.innerHTML = '';
+  let totalRate = 0;
+  for(const [name, rate] of Object.entries(cd.contribs)){
+    totalRate += rate;
+    const row = document.createElement('div');
+    row.className = 'contrib-row';
+    row.innerHTML = `<span class="contrib-name">${name}</span><span class="contrib-rate">${rate.toFixed(2)}% · ${usd(salary*rate/100)}</span>`;
+    cl.appendChild(row);
+  }
+  setText('emp-contrib-pct', totalRate.toFixed(2) + '%');
+
+  // Band positioning bar
+  const bandId = state.bandId;
+  const b = getBandUSD(country, bandId);
+  if(b){
+    const pos = getBandPosition(salary, b.minUSD, b.maxUSD);
+    document.getElementById('empRangeFill').style.width  = pos + '%';
+    document.getElementById('empRangeMarker').style.left = pos + '%';
+    document.getElementById('empRangeMin').textContent   = usd(b.minUSD);
+    document.getElementById('empRangeMax').textContent   = usd(b.maxUSD);
+    const grade = BANDS[country].grades.find(g => g.id === bandId);
+    setText('empBandTitle', `${grade.label} — ${grade.title}`);
+    const cr = salary / b.midUSD;
+    const crClass = (cr >= 0.95 && cr <= 1.05) ? 'compa-at' : (cr > 1.20 ? 'compa-over' : (cr < 0.80 ? 'compa-over' : 'compa-above'));
+    let statusClass = 'status-within', statusText = 'Within Band';
+    if(salary < b.minUSD){ statusClass = 'status-below-min'; statusText = 'Below Minimum'; }
+    else if(salary > b.maxUSD){ statusClass = 'status-above-max'; statusText = 'Exceeds Maximum'; }
+    document.getElementById('empBandBadges').innerHTML =
+      `<span class="compa-badge ${crClass}">Compa-ratio: ${cr.toFixed(2)}</span>
+       <span class="status-pill ${statusClass}">${statusText}</span>
+       <span style="font-size:11px;color:rgba(255,255,255,.45);align-self:center">Mid: ${usd(b.midUSD)}</span>`;
+  }
+}
+
+/* ========================================================
+   RENDER: REPLACEMENT TAB
+   ======================================================== */
+function renderReplacementTab(country, salary, rep){
+  const cd = C[country];
+  setText('rep-hero-total', usd(rep.total));
+  setText('rep-agency',     usd(rep.agencyFee));
+  setText('rep-ads',        usd(rep.adCost));
+  setText('rep-interview',  usd(rep.interviewCost));
+  setText('rep-bgcheck',    usd(rep.bgCheck));
+  setText('rep-recruit-sub',usd(rep.recSub));
+  setText('rep-onboard',    usd(rep.onboard));
+  setText('rep-ramp',       usd(rep.prodLoss));
+  setText('rep-temp',       usd(rep.tempCover));
+  setText('rep-knowledge',  usd(rep.kLoss));
+  setText('rep-onboard-sub',usd(rep.obSub));
+  setText('rep-base',       usd(salary));
+  setText('rep-rec-sum',    usd(rep.recSub));
+  setText('rep-ob-sum',     usd(rep.obSub));
+  setText('rep-grand',      usd(rep.total));
+  setText('rep-pct',        pct(rep.total/salary*100));
+
+  // Timeline
+  const noticeWks = (rep.noticeDays/7).toFixed(1);
+  const rampWks   = (rep.rampMos*4.3).toFixed(0);
+  document.getElementById('rep-timeline-detail').innerHTML =
+    `Notice: <strong>${rep.noticeDays} days</strong> &nbsp;·&nbsp;
+     Recruitment: <strong>~6–8 weeks</strong> &nbsp;·&nbsp;
+     Onboarding: <strong>~2 weeks</strong> &nbsp;·&nbsp;
+     Ramp-up: <strong>${rep.rampMos} months</strong><br>
+     Temp/backfill: <strong>${usd(rep.tempCover)}</strong> at ${usd(rep.tempDaily)}/day for ${rep.noticeDays} days`;
+
+  // Benchmark comparison
+  const pctVal = rep.total/salary*100;
+  const seniority = deriveSeniority(country, state.bandId);
+  let bench = '';
+  if(seniority==='junior')   bench = `${pct(pctVal)} — within typical range of 30–50% for junior roles`;
+  else if(seniority==='mid') bench = `${pct(pctVal)} — within typical range of 50–100% for mid-level roles`;
+  else if(seniority==='senior') bench = `${pct(pctVal)} — within typical range of 100–150% for senior roles`;
+  else bench = `${pct(pctVal)} — within typical range of 150–200% for director-level roles`;
+  setText('rep-benchmark-comparison', bench);
+}
+
+/* ========================================================
+   RENDER: LEAVE TAB
+   ======================================================== */
+function renderLeaveTab(country, salary, leaveType){
+  state.currentLeaveType = leaveType;
+  const cd = C[country];
+  const lv = calcLeave(country, salary, leaveType);
+
+  const leaveLabels = {maternity:'Maternity (17 wks standard)', parental:'Parental Leave', sick:'Sick Leave', annual:'Annual Leave'};
+  document.getElementById('leave-hero-label').innerHTML =
+    `${leaveLabels[leaveType]} Employer Cost &mdash; <span id="leave-hero-country">${cd.flag} ${country}</span>`;
+  setText('leave-hero-total', usd(lv.empCost));
+
+  // Breakdown
+  const bd = document.getElementById('leave-breakdown');
+  bd.innerHTML = '';
+  const breakdownData = [
+    ['Leave Duration', `${lv.weeks} weeks`],
+    ['Weekly Gross Salary', usd(lv.weeklyGross)],
+    ['Total Leave Pay', usd(lv.weeklyGross * lv.weeks)],
+    ['Govt Benefit Recovery (' + cd.govtLeavePct + '%)', usd(lv.govtPayment)],
+    ['Net Employer Cost', usd(lv.empCost)],
+  ];
+  breakdownData.forEach(([label, value], i) => {
+    const row = document.createElement('div');
+    row.className = i === breakdownData.length-1 ? 'r-row subtotal' : 'r-row';
+    row.innerHTML = `<span class="r-label">${label}</span><span class="r-value">${value}</span>`;
+    bd.appendChild(row);
+  });
+
+  // Entitlements
+  const ent = document.getElementById('leave-entitlements');
+  ent.innerHTML = '';
+  const entData = [
+    ['Maternity Leave', lv.lv.maternity + ' weeks'],
+    ['Parental Leave', lv.lv.parental + ' weeks'],
+    ['Sick Leave', lv.lv.sick + ' days/year'],
+    ['Annual / Vacation Leave', lv.lv.annual + ' days/year'],
+  ];
+  entData.forEach(([label, value]) => {
+    const row = document.createElement('div');
+    row.className = 'r-row';
+    row.innerHTML = `<span class="r-label">${label}</span><span class="r-value">${value}</span>`;
+    ent.appendChild(row);
+  });
+
+  // Govt note
+  document.getElementById('leave-govt-note').textContent =
+    cd.govtLeavePct > 0
+      ? `Government benefit covers ${cd.govtLeavePct}% of leave pay — reducing direct employer cost to ${pct(100-cd.govtLeavePct)} of total.`
+      : 'No government maternity benefit in this jurisdiction — employer bears full leave cost.';
+
+  setText('leave-annual-days', lv.lv.annual + ' days');
+  setText('leave-daily-cost',  usd(lv.dailyCost));
+  setText('leave-annual-cost', usd(lv.annualLeaveCost));
+  setText('leave-sick-days',   lv.lv.sick + ' days');
+  setText('leave-sick-cost',   usd(lv.sickCost));
+}
+
+/* ========================================================
+   RENDER: COMPARE TAB
+   ======================================================== */
+function renderCompareTab(salary){
+  const tbody = document.getElementById('cmpBody');
+  tbody.innerHTML = '';
+
+  // Section: Employment
+  let secEmp = document.createElement('tr');
+  secEmp.className = 'cmp-section-hdr';
+  secEmp.innerHTML = `<td colspan="9">Employment Cost Components</td>`;
+  tbody.appendChild(secEmp);
+
+  const rows = [];
+  for(const [country, cd] of Object.entries(C)){
+    const emp = calcEmployment(country, salary);
+    const rep = calcReplacement(country, salary);
+    const lv  = calcLeave(country, salary, 'maternity');
+    const bd  = BANDS[country];
+    // Find nearest band by mid in USD
+    let nearestBand = '—';
+    if(bd){
+      let best = null, bestDiff = Infinity;
+      bd.grades.forEach(g => {
+        const midUSD = g.mid * bd.fx;
+        const diff   = Math.abs(midUSD - salary);
+        if(diff < bestDiff){ bestDiff = diff; best = g; }
+      });
+      if(best) nearestBand = best.label;
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="text-align:left;font-weight:600;color:var(--charcoal)">
+        ${cd.flag} ${country}<br>
+        <span style="font-size:11px;color:var(--muted);font-weight:400">${cd.region} · ${cd.city}</span>
+      </td>
+      <td><span class="pill pill-teal">${nearestBand}</span></td>
+      <td>${usd(salary)}</td>
+      <td>${usd(emp.contribUSD)} <span style="font-size:10px;color:var(--muted)">(${emp.totalContribPct.toFixed(1)}%)</span></td>
+      <td>${usd(emp.benefitsUSD)}</td>
+      <td style="font-weight:700;color:var(--charcoal)">${usd(emp.total)}</td>
+      <td>${usd(rep.total)}</td>
+      <td>${usd(lv.empCost)}</td>
+      <td><span class="pill pill-green">${cd.coli}</span></td>
+    `;
+    rows.push({tr, total:emp.total});
+    tbody.appendChild(tr);
+  }
+
+  // Grand total row (sorted by total)
+  const tr = document.createElement('tr');
+  tr.className = 'cmp-grand';
+  const totals = rows.map(r => r.total);
+  const lo = Math.min(...totals), hi = Math.max(...totals);
+  tr.innerHTML = `<td colspan="5" style="text-align:left">Range across all 11 locations (same USD salary)</td><td>${usd(lo)}</td><td colspan="3">— ${usd(hi)}</td>`;
+  tbody.appendChild(tr);
+}
+
+/* ========================================================
+   UTILITIES
+   ======================================================== */
+function setText(id, val){
+  const el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
+
+function showTab(tabId){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const page = document.getElementById('page-' + tabId);
+  if(page) page.classList.add('active');
+  const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+  if(btn) btn.classList.add('active');
+}
+
+function showLeaveType(type, btn){
+  state.currentLeaveType = type;
+  document.querySelectorAll('.leave-type-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeaveTab(state.country, state.salary, type);
+}
+
+/* ========================================================
+   INIT
+   ======================================================== */
+function init(){
+  // Build country dropdown
+  const sel = document.getElementById('primaryCountry');
+  Object.entries(C).forEach(([name, cd]) => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = cd.flag + ' ' + name + ' — ' + cd.city;
+    sel.appendChild(opt);
+  });
+  sel.value = 'Canada';
+
+  // Build band dropdown for Canada
+  buildBandDropdown('Canada');
+
+  // Set initial salary to Band-5 midpoint
+  const b = getBandUSD('Canada', 'Band-5');
+  if(b){
+    document.getElementById('baseSalaryUSD').value = Math.round(b.midUSD);
+    state.salary = b.midUSD;
+    state.bandId = 'Band-5';
+    state.country = 'Canada';
+  }
+
+  recalcAll();
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

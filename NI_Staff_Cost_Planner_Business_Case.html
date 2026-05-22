@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Business Case — NI Staff Cost Scenario Planner</title>
+<style>
+:root {
+  --carmine:  #A4343A;
+  --charcoal: #253746;
+  --slate:    #425563;
+  --teal:     #00A88A;
+  --green-dk: #005844;
+  --gold:     #CC8A00;
+  --blue:     #307FE2;
+  --border:   #D4DCE3;
+  --muted:    #6B7E8D;
+  --bg:       #F7F8F9;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+@page { size: letter; margin: 0.65in 0.7in; }
+
+body {
+  font-family: Arial, sans-serif;
+  font-size: 10.5pt;
+  color: var(--charcoal);
+  background: white;
+  line-height: 1.55;
+  max-width: 8.5in;
+  margin: 0 auto;
+  padding: 0.65in 0.7in;
+}
+
+/* ── HEADER BAND ── */
+.doc-header {
+  border-top: 5px solid var(--carmine);
+  padding: 18px 0 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.doc-header-left .org {
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.doc-header-left .doc-title {
+  font-size: 18pt;
+  font-weight: 700;
+  color: var(--carmine);
+  line-height: 1.15;
+  letter-spacing: -.3px;
+}
+.doc-header-left .doc-subtitle {
+  font-size: 10pt;
+  color: var(--slate);
+  margin-top: 4px;
+}
+.doc-meta {
+  text-align: right;
+  font-size: 9pt;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.doc-meta strong { color: var(--charcoal); }
+
+/* ── EXECUTIVE SUMMARY BAND ── */
+.exec-summary {
+  background: var(--bg);
+  border-left: 4px solid var(--carmine);
+  border-radius: 0 4px 4px 0;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  font-size: 10.5pt;
+  color: var(--charcoal);
+  line-height: 1.6;
+}
+.exec-summary p + p { margin-top: 6px; }
+
+/* ── SECTION HEADINGS ── */
+.section {
+  margin-bottom: 20px;
+}
+.section-title {
+  font-size: 9pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--carmine);
+  padding-bottom: 5px;
+  border-bottom: 1.5px solid var(--border);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.section-title::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  background: var(--carmine);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── TWO-COLUMN LAYOUT ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.three-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+/* ── PROBLEM BOX ── */
+.problem-box {
+  background: #FEF3F3;
+  border: 1px solid #F0C4C6;
+  border-left: 3px solid var(--carmine);
+  border-radius: 0 4px 4px 0;
+  padding: 13px 15px;
+}
+.problem-box h4 {
+  font-size: 9.5pt;
+  font-weight: 700;
+  color: var(--carmine);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+.problem-box ul {
+  list-style: none;
+  padding: 0;
+}
+.problem-box ul li {
+  font-size: 10pt;
+  color: var(--charcoal);
+  padding: 3px 0 3px 14px;
+  position: relative;
+  border-bottom: 1px solid #F0C4C6;
+}
+.problem-box ul li:last-child { border-bottom: none; }
+.problem-box ul li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--carmine);
+  font-weight: 700;
+}
+
+/* ── USE CASE CARDS ── */
+.use-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 13px 14px;
+  border-top: 3px solid var(--teal);
+}
+.use-card h4 {
+  font-size: 9.5pt;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.use-card .use-tag {
+  font-size: 8.5pt;
+  font-weight: 700;
+  background: #D0F3EC;
+  color: var(--green-dk);
+  padding: 1px 7px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+.use-card p {
+  font-size: 9.5pt;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── PROGRAMS QUOTE ── */
+.programs-block {
+  background: #F0F6F4;
+  border-left: 4px solid var(--teal);
+  border-radius: 0 4px 4px 0;
+  padding: 14px 18px;
+}
+.programs-block .quote {
+  font-size: 10.5pt;
+  color: var(--charcoal);
+  font-style: italic;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+.programs-block .attribution {
+  font-size: 9pt;
+  font-weight: 700;
+  color: var(--teal);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+/* ── BENEFITS GRID ── */
+.benefit-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.benefit-item:last-child { border-bottom: none; }
+.benefit-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--teal);
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+.benefit-item .b-title {
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--charcoal);
+  margin-bottom: 1px;
+}
+.benefit-item .b-desc {
+  font-size: 9.5pt;
+  color: var(--muted);
+}
+
+/* ── METRICS ROW ── */
+.metric-chip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 12px 14px;
+  text-align: center;
+}
+.metric-chip .m-val {
+  font-size: 18pt;
+  font-weight: 800;
+  color: var(--carmine);
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.metric-chip .m-lbl {
+  font-size: 8.5pt;
+  color: var(--muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+/* ── RECOMMENDATION ── */
+.recommendation {
+  background: var(--charcoal);
+  color: white;
+  border-radius: 5px;
+  padding: 16px 20px;
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.rec-label {
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--teal);
+  white-space: nowrap;
+}
+.rec-text {
+  font-size: 10pt;
+  color: white;
+  line-height: 1.5;
+  flex: 1;
+}
+.rec-text strong { color: var(--teal); }
+
+/* ── FOOTER ── */
+.doc-footer {
+  margin-top: 22px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5pt;
+  color: var(--muted);
+}
+.doc-footer .ni-tag {
+  font-weight: 700;
+  color: var(--carmine);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+</style>
+</head>
+<body>
+
+<!-- DOCUMENT HEADER -->
+<div class="doc-header">
+  <div class="doc-header-left">
+    <div class="org">Nutrition International &nbsp;·&nbsp; People &amp; Culture</div>
+    <div class="doc-title">Staff Cost Scenario Planner</div>
+    <div class="doc-subtitle">Business Case — Internal Tool Deployment &nbsp;·&nbsp; FY 2025–26</div>
+  </div>
+  <div class="doc-meta">
+    <div><strong>Prepared by:</strong> Sr. Director, People &amp; Culture</div>
+    <div><strong>Date:</strong> May 2026</div>
+    <div><strong>Status:</strong> For Review &amp; Approval</div>
+    <div><strong>Classification:</strong> Internal</div>
+  </div>
+</div>
+
+<!-- EXECUTIVE SUMMARY -->
+<div class="exec-summary">
+  <p>Nutrition International operates across 11 country offices spanning three regions. Planning the true cost of hiring, replacing, or managing the leave of a staff member currently requires manual spreadsheet work, local HR interpretation, and Finance validation — a process that is inconsistent, time-consuming, and often completed too late to influence a hiring decision.</p>
+  <p>This business case recommends the immediate deployment of the <strong>NI Staff Cost Scenario Planner</strong>, a self-service web tool that gives managers and HR business partners real-time, band-accurate cost modelling for any position across all NI office locations — no spreadsheet required.</p>
+</div>
+
+<!-- TWO-COLUMN: PROBLEM + METRICS -->
+<div class="two-col">
+
+  <!-- Problem -->
+  <div class="section">
+    <div class="section-title">The Problem</div>
+    <div class="problem-box">
+      <h4>Current State Gaps</h4>
+      <ul>
+        <li>No single, consistent tool exists for estimating total employment cost — managers submit budget requests with base salary only, missing employer contributions of 8–28% depending on country</li>
+        <li>Replacement costs are routinely underestimated or omitted from budget submissions, despite averaging 40–70% of annual salary for mid-level positions</li>
+        <li>Leave impact (maternity, medical, long-term) has no standard cost model; Finance and HR must rebuild estimates manually per request</li>
+        <li>Cross-location hiring comparisons require days of back-and-forth between HR, Finance, and Country Offices</li>
+        <li>NI's official salary bands (Canada: Band 1–10; Country Offices: Birches BG-05 to BG-13) are not embedded in any planning tool — managers enter salaries without knowing if they are within band</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Scale metrics -->
+  <div class="section">
+    <div class="section-title">Scale of the Problem</div>
+    <div class="three-col">
+      <div class="metric-chip">
+        <div class="m-val">11</div>
+        <div class="m-lbl">Office Locations</div>
+      </div>
+      <div class="metric-chip">
+        <div class="m-val">40–70%</div>
+        <div class="m-lbl">Avg. Replacement Cost (% salary)</div>
+      </div>
+      <div class="metric-chip">
+        <div class="m-val">8–28%</div>
+        <div class="m-lbl">Employer Burden Range</div>
+      </div>
+    </div>
+    <div style="font-size:9.5pt;color:var(--muted);line-height:1.5;margin-top:6px;">
+      Without a shared tool, each hiring or budget request requires 2–4 hours of manual modelling from HR and Finance. Across an estimated 60–80 annual hiring actions, this represents <strong style="color:var(--charcoal);">120–320 hours of avoidable effort</strong> per year — not counting leave scenarios or location comparisons.
+    </div>
+
+    <div class="section-title" style="margin-top:16px;">Programs Unit Context</div>
+    <div class="programs-block">
+      <div class="quote">"Programs teams have been asking for a simple way to model the cost of a position before we raise it with Finance. We spend more time justifying numbers than we do planning the actual program."</div>
+      <div class="attribution">Programs &amp; Country Office Feedback — P&amp;C FY2026 Planning Cycle</div>
+    </div>
+    <div style="font-size:9.5pt;color:var(--muted);margin-top:8px;line-height:1.5;">
+      The Programs unit is NI's largest employer of country-office staff. Country Directors and Program Managers routinely need to model hypothetical positions — new hires, backfills, and consultants — before approaching Finance. Without a shared tool, these requests arrive with inconsistent assumptions and create rework for both HR and Finance.
+    </div>
+  </div>
+
+</div>
+
+<!-- USE CASES -->
+<div class="section">
+  <div class="section-title">Use Cases</div>
+  <div class="three-col">
+
+    <div class="use-card">
+      <h4><span class="use-tag">Hiring</span></h4>
+      <p>Managers select a country and NI band level to instantly see the total employment cost — base salary + statutory contributions + benefits — before raising a position request. Supports accurate budget submissions.</p>
+    </div>
+
+    <div class="use-card">
+      <h4><span class="use-tag">Replacement</span></h4>
+      <p>When a resignation is received, HR and Finance can model the full replacement cost — recruitment, onboarding, ramp-up productivity loss, and knowledge transfer — to inform the decision to backfill or restructure.</p>
+    </div>
+
+    <div class="use-card">
+      <h4><span class="use-tag">Leave Planning</span></h4>
+      <p>For maternity, medical, or extended leave, the tool calculates gross cost to the employer including statutory offsets, backfill cost, and productivity impact — enabling timely budget adjustments.</p>
+    </div>
+
+    <div class="use-card">
+      <h4><span class="use-tag">Location Compare</span></h4>
+      <p>Side-by-side comparison of up to all 11 NI office locations — employment cost, replacement cost, and leave cost — to support strategic workforce decisions and program proposal costing.</p>
+    </div>
+
+    <div class="use-card">
+      <h4><span class="use-tag">Band Compliance</span></h4>
+      <p>Salary entries are validated against the official NI Canada Band 1–10 and Birches Group BG-05 to BG-13 structures. Green-circle and red-circle status is surfaced immediately, reducing out-of-band offers.</p>
+    </div>
+
+    <div class="use-card">
+      <h4><span class="use-tag">Proposal Costing</span></h4>
+      <p>Programs staff can model staff costs for donor proposals — including employer burden, leave risk, and replacement assumptions — using the same assumptions Finance uses, reducing proposal revision cycles.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- BENEFITS -->
+<div class="section">
+  <div class="section-title">Benefits &amp; Value</div>
+  <div class="two-col">
+    <div>
+      <div class="benefit-item">
+        <div class="benefit-dot"></div>
+        <div>
+          <div class="b-title">Time savings — HR, Finance &amp; Programs</div>
+          <div class="b-desc">Eliminates 2–4 hours of manual cost modelling per hiring action. Estimated 120–320 hours reclaimed annually across all offices.</div>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-dot"></div>
+        <div>
+          <div class="b-title">Improved budget accuracy</div>
+          <div class="b-desc">Employer burden rates (8–28% by country) and replacement costs are embedded in every estimate, reducing post-submission corrections.</div>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-dot"></div>
+        <div>
+          <div class="b-title">Band compliance by design</div>
+          <div class="b-desc">Official NI salary structures are embedded directly in the tool. Out-of-band salaries are flagged before they reach an offer letter.</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="benefit-item">
+        <div class="benefit-dot"></div>
+        <div>
+          <div class="b-title">Empowers Programs teams</div>
+          <div class="b-desc">Country Directors and Program Managers can self-serve cost estimates, reducing dependency on HR and Finance for preliminary modelling.</div>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-dot"></div>
+        <div>
+          <div class="b-title">Single source of truth</div>
+          <div class="b-desc">All 11 offices use the same statutory rates, FX assumptions, and band structures — eliminating version-control and inconsistency risks.</div>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-dot"></div>
+        <div>
+          <div class="b-title">No implementation cost</div>
+          <div class="b-desc">Delivered as a standalone HTML file hosted on SharePoint or the HRIS portal. No software licences, infrastructure, or IT project required.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECOMMENDATION -->
+<div class="recommendation">
+  <div class="rec-label">Recommendation</div>
+  <div class="rec-text">
+    Deploy the <strong>NI Staff Cost Scenario Planner</strong> immediately to all HR Business Partners, Finance Business Partners, Country Directors, and Program Managers via the P&amp;C SharePoint intranet. Establish a <strong>quarterly update cycle</strong> aligned to Birches Group data releases to keep salary structures current. Prioritize access for Programs unit staff ahead of the FY2026–27 proposal season.
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div class="ni-tag">Nutrition International &nbsp;·&nbsp; People &amp; Culture</div>
+  <div>Staff Cost Scenario Planner &nbsp;·&nbsp; Business Case &nbsp;·&nbsp; May 2026 &nbsp;·&nbsp; Confidential — Internal Use Only</div>
+</div>
+
+</body>
+</html>
