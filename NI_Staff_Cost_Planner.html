@@ -221,6 +221,35 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
 }
 .range-labels{display:flex;justify-content:space-between;margin-top:6px;font-size:10px;color:var(--muted);letter-spacing:.2px}
 
+/* Interactive salary slider */
+#salarySlider{
+  -webkit-appearance:none;appearance:none;
+  width:100%;height:6px;border-radius:3px;
+  outline:none;cursor:pointer;
+  margin:10px 0 0;display:block;
+  background:var(--border);
+}
+#salarySlider::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:18px;height:18px;border-radius:50%;
+  background:white;border:2.5px solid var(--teal);
+  box-shadow:0 1px 6px rgba(0,0,0,.18);
+  cursor:grab;margin-top:-6px;
+  transition:box-shadow .15s,transform .1s;
+}
+#salarySlider:active::-webkit-slider-thumb{
+  cursor:grabbing;
+  box-shadow:0 0 0 6px rgba(0,168,138,.18);
+  transform:scale(1.15);
+}
+#salarySlider::-webkit-slider-runnable-track{height:6px;border-radius:3px}
+#salarySlider::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;
+  background:white;border:2.5px solid var(--teal);
+  box-shadow:0 1px 6px rgba(0,0,0,.18);cursor:grab;
+}
+#salarySlider::-moz-range-track{height:6px;border-radius:3px;background:var(--border)}
+
 /* Band stats */
 .band-stats{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
 .band-stat{
@@ -445,12 +474,9 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
       <div class="band-viz">
         <div class="band-desc" id="bandDesc">—</div>
         <div class="band-system-note" id="bandTitleDesc">Select location and band to see details</div>
-        <!-- Range bar -->
+        <!-- Salary slider -->
         <div class="range-bar-wrap">
-          <div class="range-track">
-            <div class="range-fill" id="rangeFill" style="width:50%"></div>
-            <div class="range-marker" id="rangeMarker" style="left:50%"></div>
-          </div>
+          <input type="range" id="salarySlider" min="0" max="300000" step="500" value="67437" oninput="onSliderInput()">
           <div class="range-labels">
             <span id="rangeMinLbl">Min</span>
             <span>Midpoint</span>
@@ -1198,10 +1224,12 @@ function updateBandViz(countryName, gradeId, salaryUSD){
   document.getElementById('rangeMinLbl').textContent = usd(b.minUSD);
   document.getElementById('rangeMaxLbl').textContent = usd(b.maxUSD);
 
-  // Bar position
-  const pos = getBandPosition(salaryUSD, b.minUSD, b.maxUSD);
-  document.getElementById('rangeFill').style.width = pos + '%';
-  document.getElementById('rangeMarker').style.left = pos + '%';
+  // Sync interactive slider
+  const sl = document.getElementById('salarySlider');
+  sl.min = Math.round(b.minUSD);
+  sl.max = Math.round(b.maxUSD);
+  sl.step = Math.max(100, Math.round((b.maxUSD - b.minUSD) / 200));
+  syncSlider(salaryUSD);
 
   // Compa-ratio
   const cr = salaryUSD / b.midUSD;
@@ -1250,9 +1278,27 @@ function onBandChange(){
   recalcAll();
 }
 
+function syncSlider(salary){
+  const sl = document.getElementById('salarySlider');
+  const min = parseFloat(sl.min) || 0;
+  const max = parseFloat(sl.max) || 1;
+  const pct = Math.max(0, Math.min(100, (salary - min) / (max - min) * 100));
+  sl.value = Math.round(salary);
+  sl.style.background = `linear-gradient(90deg,var(--teal) ${pct}%,var(--border) ${pct}%)`;
+}
+
+function onSliderInput(){
+  const salary = parseFloat(document.getElementById('salarySlider').value) || 0;
+  document.getElementById('baseSalaryUSD').value = salary;
+  state.salary = salary;
+  syncSlider(salary);
+  updateBandViz(state.country, state.bandId, salary);
+  recalcAll();
+}
+
 function onSalaryInput(){
   state.salary = parseFloat(document.getElementById('baseSalaryUSD').value) || 0;
-  // Update band viz without changing selected band
+  syncSlider(state.salary);
   updateBandViz(state.country, state.bandId, state.salary);
   recalcAll();
 }
