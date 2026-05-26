@@ -279,6 +279,11 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
 .compa-above{background:#FDF3D8;color:#7A4800;border:1px solid #F0D898}
 .compa-below{background:#FDF3D8;color:#7A4800;border:1px solid #F0D898}
 .compa-over{background:#FCDCDE;color:#A4343A;border:1px solid #F0B8BC}
+.currency-bar{display:flex;align-items:center;gap:6px;padding:10px 0 2px;flex-wrap:wrap}
+.currency-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s}
+.currency-pill:hover{border-color:var(--teal);color:var(--teal)}
+.currency-pill.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.fx-note{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4}
 .status-pill{
   padding:3px 10px;
   border-radius:3px;
@@ -494,6 +499,15 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
           <span class="compa-badge compa-at" id="compaBadge">Compa-ratio: —</span>
           <span class="status-pill status-within" id="bandStatusPill">—</span>
         </div>
+        <div class="currency-bar" id="currency-bar">
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Display in:</span>
+          <button class="currency-pill active" id="pill-CAD" onclick="onCurrencyChange('CAD')">CA$</button>
+          <button class="currency-pill" id="pill-USD" onclick="onCurrencyChange('USD')">US$</button>
+          <button class="currency-pill" id="pill-EUR" onclick="onCurrencyChange('EUR')">EUR €</button>
+          <button class="currency-pill" id="pill-GBP" onclick="onCurrencyChange('GBP')">GBP £</button>
+          <button class="currency-pill" id="pill-CHF" onclick="onCurrencyChange('CHF')">CHF</button>
+        </div>
+        <div class="fx-note">Daily market rates via OANDA &nbsp;·&nbsp; Updated: <span id="fx-update-date">loading…</span> &nbsp;·&nbsp; For budgets use Finance treasury rate.</div>
       </div>
     </div>
   </div>
@@ -518,7 +532,7 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
         </select>
       </div>
       <div class="field">
-        <label>Annual Base Salary (USD)</label>
+        <label>Annual Base Salary (<span id="salary-currency-label">CAD</span>)</label>
         <input type="number" id="baseSalaryUSD" value="45000" min="1000" step="500" oninput="onSalaryInput()">
         <div class="hint-local" id="salaryHintLocal">— local currency equivalent —</div>
         <div class="hint" id="salaryHintFX"></div>
@@ -841,7 +855,7 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
 <!-- ============================================================ -->
 <div id="page-compare" class="page">
   <div class="info-bar">
-    Comparing all 11 NI office locations at the same salary and assumptions. Band data shown uses each country's midpoint for the nearest equivalent grade. All values in USD.
+    Comparing all 11 NI office locations at the same salary and assumptions. Band data shown uses each country's midpoint for the nearest equivalent grade. All values in <span id="compare-currency-label">CAD</span>.
   </div>
 
   <div class="card" style="overflow-x:auto">
@@ -1068,6 +1082,22 @@ const C = {
 };
 
 /* ========================================================
+   FX / CURRENCY
+   ======================================================== */
+let fxRates = { USD:1, CAD:1.35, EUR:0.91, GBP:0.78, CHF:0.89 };
+let fxLastUpdated = 'fallback';
+let displayCurrency = 'CAD';
+const CURRENCY_SYMBOLS = { USD:'$', CAD:'CA$', EUR:'€', GBP:'£', CHF:'CHF ' };
+
+function fmt(usdAmount){
+  const val = usdAmount * (fxRates[displayCurrency] || 1);
+  const sym = CURRENCY_SYMBOLS[displayCurrency] || displayCurrency + ' ';
+  return sym + Math.round(val).toLocaleString('en-US');
+}
+function fromDisp(v){ return v / (fxRates[displayCurrency] || 1); }
+function toDisp(usdAmount){ return Math.round(usdAmount * (fxRates[displayCurrency] || 1)); }
+
+/* ========================================================
    STATE
    ======================================================== */
 let state = {
@@ -1080,7 +1110,7 @@ let state = {
 /* ========================================================
    HELPERS
    ======================================================== */
-function usd(n){ return '$' + Math.round(n).toLocaleString('en-US'); }
+function usd(n){ return fmt(n); }
 function pct(n){ return n.toFixed(1) + '%'; }
 function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
 
@@ -1221,15 +1251,15 @@ function updateBandViz(countryName, gradeId, salaryUSD){
   document.getElementById('bsMin').textContent = usd(b.minUSD);
   document.getElementById('bsMid').textContent = usd(b.midUSD);
   document.getElementById('bsMax').textContent = usd(b.maxUSD);
-  document.getElementById('rangeMinLbl').textContent = usd(b.minUSD);
-  document.getElementById('rangeMaxLbl').textContent = usd(b.maxUSD);
+  document.getElementById('rangeMinLbl').textContent = fmt(b.minUSD);
+  document.getElementById('rangeMaxLbl').textContent = fmt(b.maxUSD);
 
   // Sync interactive slider
   const sl = document.getElementById('salarySlider');
-  sl.min = Math.round(b.minUSD);
-  sl.max = Math.round(b.maxUSD);
-  sl.step = Math.max(100, Math.round((b.maxUSD - b.minUSD) / 200));
-  syncSlider(salaryUSD);
+  sl.min  = toDisp(b.minUSD);
+  sl.max  = toDisp(b.maxUSD);
+  sl.step = Math.max(100, Math.round((toDisp(b.maxUSD) - toDisp(b.minUSD)) / 200));
+  syncSlider(toDisp(salaryUSD));
 
   // Compa-ratio
   const cr = salaryUSD / b.midUSD;
@@ -1260,7 +1290,7 @@ function onCountryChange(){
   state.bandId = newBandId;
   const b = getBandUSD(country, newBandId);
   if(b){
-    document.getElementById('baseSalaryUSD').value = Math.round(b.midUSD);
+    document.getElementById('baseSalaryUSD').value = toDisp(b.midUSD);
     state.salary = b.midUSD;
   }
   recalcAll();
@@ -1272,35 +1302,80 @@ function onBandChange(){
   state.bandId  = bandId;
   const b = getBandUSD(country, bandId);
   if(b){
-    document.getElementById('baseSalaryUSD').value = Math.round(b.midUSD);
+    document.getElementById('baseSalaryUSD').value = toDisp(b.midUSD);
     state.salary = b.midUSD;
   }
   recalcAll();
 }
 
-function syncSlider(salary){
+function syncSlider(dispVal){
   const sl = document.getElementById('salarySlider');
   const min = parseFloat(sl.min) || 0;
   const max = parseFloat(sl.max) || 1;
-  const pct = Math.max(0, Math.min(100, (salary - min) / (max - min) * 100));
-  sl.value = Math.round(salary);
-  sl.style.background = `linear-gradient(90deg,var(--teal) ${pct}%,var(--border) ${pct}%)`;
+  const p = Math.max(0, Math.min(100, (dispVal - min) / (max - min) * 100));
+  sl.value = Math.round(dispVal);
+  sl.style.background = `linear-gradient(90deg,var(--teal) ${p}%,var(--border) ${p}%)`;
 }
 
 function onSliderInput(){
-  const salary = parseFloat(document.getElementById('salarySlider').value) || 0;
-  document.getElementById('baseSalaryUSD').value = salary;
-  state.salary = salary;
-  syncSlider(salary);
-  updateBandViz(state.country, state.bandId, salary);
+  const dispVal = parseFloat(document.getElementById('salarySlider').value) || 0;
+  document.getElementById('baseSalaryUSD').value = dispVal;
+  state.salary = fromDisp(dispVal);
+  syncSlider(dispVal);
+  updateBandViz(state.country, state.bandId, state.salary);
   recalcAll();
 }
 
 function onSalaryInput(){
-  state.salary = parseFloat(document.getElementById('baseSalaryUSD').value) || 0;
-  syncSlider(state.salary);
+  const dispVal = parseFloat(document.getElementById('baseSalaryUSD').value) || 0;
+  state.salary = fromDisp(dispVal);
+  syncSlider(dispVal);
   updateBandViz(state.country, state.bandId, state.salary);
   recalcAll();
+}
+
+/* ========================================================
+   CURRENCY SWITCHING & FX
+   ======================================================== */
+function applyDisplayCurrency(code){
+  displayCurrency = code;
+  ['CAD','USD','EUR','GBP','CHF'].forEach(c => {
+    const p = document.getElementById('pill-' + c);
+    if(p) p.classList.toggle('active', c === code);
+  });
+  const lbl = document.getElementById('salary-currency-label');
+  if(lbl) lbl.textContent = code;
+  const cmp = document.getElementById('compare-currency-label');
+  if(cmp) cmp.textContent = code;
+  // Update salary input to new currency
+  const dispVal = toDisp(state.salary);
+  document.getElementById('baseSalaryUSD').value = dispVal;
+  // Update slider range
+  const b = getBandUSD(state.country, state.bandId);
+  if(b){
+    const sl = document.getElementById('salarySlider');
+    sl.min   = toDisp(b.minUSD);
+    sl.max   = toDisp(b.maxUSD);
+    sl.step  = Math.max(100, Math.round((toDisp(b.maxUSD) - toDisp(b.minUSD)) / 200));
+    syncSlider(dispVal);
+  }
+  recalcAll();
+}
+function onCurrencyChange(code){ applyDisplayCurrency(code); }
+
+async function fetchFXRates(){
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const d   = await res.json();
+    if(d.result === 'success'){
+      fxRates = d.rates;
+      const raw = d.time_last_update_utc;
+      fxLastUpdated = raw ? new Date(raw).toLocaleDateString('en-CA') : 'today';
+      const el = document.getElementById('fx-update-date');
+      if(el) el.textContent = fxLastUpdated;
+    }
+  } catch(e) { console.warn('FX fetch failed, using fallback rates'); }
+  applyDisplayCurrency(displayCurrency);
 }
 
 /* ========================================================
@@ -1308,7 +1383,8 @@ function onSalaryInput(){
    ======================================================== */
 function recalcAll(){
   const country  = document.getElementById('primaryCountry').value;
-  const salary   = parseFloat(document.getElementById('baseSalaryUSD').value) || 0;
+  const dispVal  = parseFloat(document.getElementById('baseSalaryUSD').value) || 0;
+  const salary   = fromDisp(dispVal);
   const bandId   = state.bandId;
   state.country  = country;
   state.salary   = salary;
@@ -1635,13 +1711,13 @@ function init(){
   // Set initial salary to Band-5 midpoint
   const b = getBandUSD('Canada', 'Band-5');
   if(b){
-    document.getElementById('baseSalaryUSD').value = Math.round(b.midUSD);
     state.salary = b.midUSD;
     state.bandId = 'Band-5';
     state.country = 'Canada';
+    document.getElementById('baseSalaryUSD').value = toDisp(b.midUSD);
   }
 
-  recalcAll();
+  fetchFXRates();
 }
 
 window.addEventListener('load', init);
