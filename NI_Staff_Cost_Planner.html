@@ -279,10 +279,9 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
 .compa-above{background:#FDF3D8;color:#7A4800;border:1px solid #F0D898}
 .compa-below{background:#FDF3D8;color:#7A4800;border:1px solid #F0D898}
 .compa-over{background:#FCDCDE;color:#A4343A;border:1px solid #F0B8BC}
-.currency-bar{display:flex;align-items:center;gap:6px;padding:10px 0 2px;flex-wrap:wrap}
-.currency-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--muted);transition:all .15s}
-.currency-pill:hover{border-color:var(--teal);color:var(--teal)}
-.currency-pill.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.currency-bar{display:flex;align-items:center;gap:8px;padding:10px 0 2px;flex-wrap:wrap}
+.currency-select{padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--charcoal);cursor:pointer;outline:none;transition:border-color .15s;min-width:200px}
+.currency-select:hover,.currency-select:focus{border-color:var(--teal)}
 .fx-note{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4}
 .status-pill{
   padding:3px 10px;
@@ -490,9 +489,9 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
         </div>
         <!-- Stats -->
         <div class="band-stats">
-          <div class="band-stat"><div class="bs-val" id="bsMin">—</div><div class="bs-lbl">Min (USD)</div></div>
-          <div class="band-stat mid-stat"><div class="bs-val" id="bsMid">—</div><div class="bs-lbl">Midpoint (USD)</div></div>
-          <div class="band-stat"><div class="bs-val" id="bsMax">—</div><div class="bs-lbl">Max (USD)</div></div>
+          <div class="band-stat"><div class="bs-val" id="bsMin">—</div><div class="bs-lbl">Min (<span class="currency-lbl">CAD</span>)</div></div>
+          <div class="band-stat mid-stat"><div class="bs-val" id="bsMid">—</div><div class="bs-lbl">Midpoint (<span class="currency-lbl">CAD</span>)</div></div>
+          <div class="band-stat"><div class="bs-val" id="bsMax">—</div><div class="bs-lbl">Max (<span class="currency-lbl">CAD</span>)</div></div>
         </div>
         <!-- Badges -->
         <div class="band-badges">
@@ -501,11 +500,27 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
         </div>
         <div class="currency-bar" id="currency-bar">
           <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Display in:</span>
-          <button class="currency-pill active" id="pill-CAD" onclick="onCurrencyChange('CAD')">CA$</button>
-          <button class="currency-pill" id="pill-USD" onclick="onCurrencyChange('USD')">US$</button>
-          <button class="currency-pill" id="pill-EUR" onclick="onCurrencyChange('EUR')">EUR €</button>
-          <button class="currency-pill" id="pill-GBP" onclick="onCurrencyChange('GBP')">GBP £</button>
-          <button class="currency-pill" id="pill-CHF" onclick="onCurrencyChange('CHF')">CHF</button>
+          <select id="currencySelect" class="currency-select" onchange="onCurrencyChange(this.value)">
+            <optgroup label="Major Currencies">
+              <option value="CAD" selected>CA$ — Canadian Dollar</option>
+              <option value="USD">US$ — US Dollar</option>
+              <option value="EUR">€ — Euro</option>
+              <option value="GBP">£ — British Pound</option>
+              <option value="CHF">CHF — Swiss Franc</option>
+            </optgroup>
+            <optgroup label="NI Country Currencies">
+              <option value="KES">KES — Kenyan Shilling</option>
+              <option value="ETB">ETB — Ethiopian Birr</option>
+              <option value="NGN">NGN — Nigerian Naira</option>
+              <option value="XOF">XOF — West African CFA Franc</option>
+              <option value="TZS">TZS — Tanzanian Shilling</option>
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="BDT">BDT — Bangladeshi Taka</option>
+              <option value="IDR">IDR — Indonesian Rupiah</option>
+              <option value="PKR">PKR — Pakistani Rupee</option>
+              <option value="PHP">PHP — Philippine Peso</option>
+            </optgroup>
+          </select>
         </div>
         <div class="fx-note">Daily market rates via OANDA &nbsp;·&nbsp; Updated: <span id="fx-update-date">loading…</span> &nbsp;·&nbsp; For budgets use Finance treasury rate.</div>
       </div>
@@ -575,8 +590,8 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
       </div>
       <div class="assump-grid">
         <label>Job Advertising Cost</label>
-        <input type="number" id="adCostUSD" value="400" oninput="recalcAll()">
-        <span class="assump-unit">USD</span>
+        <input type="number" id="adCostUSD" value="540" oninput="recalcAll()">
+        <span class="assump-unit currency-lbl">CAD</span>
       </div>
       <div class="assump-grid">
         <label>Total Interview Hours</label>
@@ -585,8 +600,8 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
       </div>
       <div class="assump-grid">
         <label>Onboarding &amp; Training Cost</label>
-        <input type="number" id="onboardingUSD" value="2000" oninput="recalcAll()">
-        <span class="assump-unit">USD</span>
+        <input type="number" id="onboardingUSD" value="2700" oninput="recalcAll()">
+        <span class="assump-unit currency-lbl">CAD</span>
       </div>
       <div class="assump-grid">
         <label>Ramp-up Period</label>
@@ -600,8 +615,8 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
       </div>
       <div class="assump-grid">
         <label>Temp / Backfill Daily Rate</label>
-        <input type="number" id="tempDailyUSD" value="200" oninput="recalcAll()">
-        <span class="assump-unit">USD/day</span>
+        <input type="number" id="tempDailyUSD" value="270" oninput="recalcAll()">
+        <span class="assump-unit"><span class="currency-lbl">CAD</span>/day</span>
       </div>
       <div class="assump-grid">
         <label>Knowledge Transfer Loss</label>
@@ -618,9 +633,9 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
 
   <!-- Bottom KPI chips -->
   <div class="hero-grid" style="margin-top:18px">
-    <div class="stat-chip"><div class="sc-val" id="chip-annual">—</div><div class="sc-lbl">Annual Employment Cost (USD)</div></div>
-    <div class="stat-chip"><div class="sc-val" id="chip-replace">—</div><div class="sc-lbl">Replacement Cost (USD)</div></div>
-    <div class="stat-chip"><div class="sc-val" id="chip-leave">—</div><div class="sc-lbl">Maternity Leave Cost — 17 wks (USD)</div></div>
+    <div class="stat-chip"><div class="sc-val" id="chip-annual">—</div><div class="sc-lbl">Annual Employment Cost (<span class="currency-lbl">CAD</span>)</div></div>
+    <div class="stat-chip"><div class="sc-val" id="chip-replace">—</div><div class="sc-lbl">Replacement Cost (<span class="currency-lbl">CAD</span>)</div></div>
+    <div class="stat-chip"><div class="sc-val" id="chip-leave">—</div><div class="sc-lbl">Maternity Leave Cost — 17 wks (<span class="currency-lbl">CAD</span>)</div></div>
   </div>
 </div>
 
@@ -660,7 +675,7 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
     <div>
       <div class="hero hero-blue">
         <div class="amount" id="emp-hero-total">$0</div>
-        <div class="hero-label">Total Annual Employment Cost (USD) &middot; <span id="emp-hero-country">—</span></div>
+        <div class="hero-label">Total Annual Employment Cost (<span class="currency-lbl">CAD</span>) &middot; <span id="emp-hero-country">—</span></div>
       </div>
 
       <div class="card" style="margin-bottom:18px">
@@ -707,9 +722,9 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
           Monthly &amp; Weekly Cost
         </div>
-        <div class="r-row"><span class="r-label">Monthly Employment Cost (USD)</span><span class="r-value" id="emp-monthly">—</span></div>
-        <div class="r-row"><span class="r-label">Weekly Employment Cost (USD)</span><span class="r-value" id="emp-weekly">—</span></div>
-        <div class="r-row"><span class="r-label">Daily Employment Cost (USD)</span><span class="r-value" id="emp-daily">—</span></div>
+        <div class="r-row"><span class="r-label">Monthly Employment Cost (<span class="currency-lbl">CAD</span>)</span><span class="r-value" id="emp-monthly">—</span></div>
+        <div class="r-row"><span class="r-label">Weekly Employment Cost (<span class="currency-lbl">CAD</span>)</span><span class="r-value" id="emp-weekly">—</span></div>
+        <div class="r-row"><span class="r-label">Daily Employment Cost (<span class="currency-lbl">CAD</span>)</span><span class="r-value" id="emp-daily">—</span></div>
         <hr>
         <div class="r-row"><span class="r-label">Monthly Local Currency</span><span class="r-value" id="emp-monthly-local">—</span></div>
         <div class="r-row"><span class="r-label">Annual Local Currency</span><span class="r-value" id="emp-annual-local">—</span></div>
@@ -726,7 +741,7 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
     <div>
       <div class="hero hero-red">
         <div class="amount" id="rep-hero-total">$0</div>
-        <div class="hero-label">Total Estimated Replacement Cost (USD)</div>
+        <div class="hero-label">Total Estimated Replacement Cost (<span class="currency-lbl">CAD</span>)</div>
       </div>
 
       <div class="card" style="margin-bottom:18px">
@@ -841,8 +856,8 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
           Annual Leave Summary
         </div>
         <div class="r-row"><span class="r-label">Statutory Annual Leave</span><span class="r-value" id="leave-annual-days">—</span></div>
-        <div class="r-row"><span class="r-label">Daily Cost (USD)</span><span class="r-value" id="leave-daily-cost">—</span></div>
-        <div class="r-row"><span class="r-label">Total Annual Leave Cost (USD)</span><span class="r-value" id="leave-annual-cost">—</span></div>
+        <div class="r-row"><span class="r-label">Daily Cost (<span class="currency-lbl">CAD</span>)</span><span class="r-value" id="leave-daily-cost">—</span></div>
+        <div class="r-row"><span class="r-label">Total Annual Leave Cost (<span class="currency-lbl">CAD</span>)</span><span class="r-value" id="leave-annual-cost">—</span></div>
         <div class="r-row"><span class="r-label">Sick Leave Entitlement</span><span class="r-value" id="leave-sick-days">—</span></div>
         <div class="r-row"><span class="r-label">Sick Leave Cost (est. 30% utilisation)</span><span class="r-value" id="leave-sick-cost">—</span></div>
       </div>
@@ -861,7 +876,7 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
   <div class="card" style="overflow-x:auto">
     <div class="card-header">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Multi-Location Cost Comparison — USD
+      Multi-Location Cost Comparison — <span class="currency-lbl">CAD</span>
     </div>
     <table class="cmp-table" id="cmpTable">
       <thead>
@@ -1084,10 +1099,10 @@ const C = {
 /* ========================================================
    FX / CURRENCY
    ======================================================== */
-let fxRates = { USD:1, CAD:1.35, EUR:0.91, GBP:0.78, CHF:0.89 };
+let fxRates = { USD:1, CAD:1.35, EUR:0.91, GBP:0.78, CHF:0.89, KES:130, ETB:114, NGN:1538, XOF:614, TZS:2564, INR:83, BDT:110, IDR:16129, PKR:278, PHP:56 };
 let fxLastUpdated = 'fallback';
 let displayCurrency = 'CAD';
-const CURRENCY_SYMBOLS = { USD:'$', CAD:'CA$', EUR:'€', GBP:'£', CHF:'CHF ' };
+const CURRENCY_SYMBOLS = { USD:'$', CAD:'CA$', EUR:'€', GBP:'£', CHF:'CHF ', KES:'KES ', ETB:'ETB ', NGN:'₦', XOF:'CFA ', TZS:'TZS ', INR:'₹', BDT:'৳', IDR:'Rp ', PKR:'Rs ', PHP:'₱' };
 
 function fmt(usdAmount){
   const val = usdAmount * (fxRates[displayCurrency] || 1);
@@ -1173,12 +1188,12 @@ function calcReplacement(country, salaryUSD){
   const cd = C[country];
   const emp = calcEmployment(country, salaryUSD);
   const agencyFee   = salaryUSD * (parseFloat(document.getElementById('agencyFeePct').value)||18) / 100;
-  const adCost      = parseFloat(document.getElementById('adCostUSD').value)||400;
+  const adCost      = fromDisp(parseFloat(document.getElementById('adCostUSD').value)||540);
   const intHours    = parseFloat(document.getElementById('interviewHours').value)||18;
-  const onboard     = parseFloat(document.getElementById('onboardingUSD').value)||2000;
+  const onboard     = fromDisp(parseFloat(document.getElementById('onboardingUSD').value)||2700);
   const rampMos     = parseFloat(document.getElementById('rampMonths').value)||3;
   const rampEff     = parseFloat(document.getElementById('rampEfficiency').value)||55;
-  const tempDaily   = parseFloat(document.getElementById('tempDailyUSD').value)||200;
+  const tempDaily   = fromDisp(parseFloat(document.getElementById('tempDailyUSD').value)||270);
   const kLoss       = salaryUSD * (parseFloat(document.getElementById('knowledgeLossPct').value)||10) / 100;
 
   const dailyEmp    = emp.total / 260;
@@ -1338,18 +1353,35 @@ function onSalaryInput(){
    CURRENCY SWITCHING & FX
    ======================================================== */
 function applyDisplayCurrency(code){
+  const prevRate = fxRates[displayCurrency] || 1;
+  const newRate  = fxRates[code] || 1;
   displayCurrency = code;
-  ['CAD','USD','EUR','GBP','CHF'].forEach(c => {
-    const p = document.getElementById('pill-' + c);
-    if(p) p.classList.toggle('active', c === code);
-  });
+
+  // Update dropdown
+  const sel = document.getElementById('currencySelect');
+  if(sel) sel.value = code;
+
+  // Update all static currency labels
+  document.querySelectorAll('.currency-lbl').forEach(el => el.textContent = code);
+
+  // Update salary label
   const lbl = document.getElementById('salary-currency-label');
   if(lbl) lbl.textContent = code;
   const cmp = document.getElementById('compare-currency-label');
   if(cmp) cmp.textContent = code;
+
+  // Convert assumption inputs (adCost, onboard, tempDaily) from old to new currency
+  ['adCostUSD','onboardingUSD','tempDailyUSD'].forEach(id => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    const usdVal = parseFloat(el.value) / prevRate;
+    el.value = Math.round(usdVal * newRate);
+  });
+
   // Update salary input to new currency
   const dispVal = toDisp(state.salary);
   document.getElementById('baseSalaryUSD').value = dispVal;
+
   // Update slider range
   const b = getBandUSD(state.country, state.bandId);
   if(b){
