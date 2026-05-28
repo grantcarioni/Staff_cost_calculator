@@ -283,6 +283,16 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
 .currency-select{padding:4px 8px;border-radius:4px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--charcoal);cursor:pointer;outline:none;transition:border-color .15s;min-width:200px}
 .currency-select:hover,.currency-select:focus{border-color:var(--teal)}
 .fx-note{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4}
+.cost-type-hdr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:8px 0 4px;display:flex;align-items:center;gap:6px}
+.cost-type-budget{color:var(--blue)}
+.cost-type-opp{color:var(--gold)}
+.cost-type-badge{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700}
+.badge-budget{background:#E8F0FB;color:var(--blue)}
+.badge-opp{background:#FFF3D6;color:#7A5500}
+.overlap-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.overlap-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:2px}
+.reloc-toggle{display:flex;align-items:center;gap:8px;padding:6px 0}
+.reloc-input-row{display:flex;align-items:center;gap:8px;margin-top:4px}
 .status-pill{
   padding:3px 10px;
   border-radius:3px;
@@ -519,6 +529,7 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
               <option value="IDR">IDR — Indonesian Rupiah</option>
               <option value="PKR">PKR — Pakistani Rupee</option>
               <option value="PHP">PHP — Philippine Peso</option>
+              <option value="MWK">MWK — Malawian Kwacha</option>
             </optgroup>
           </select>
         </div>
@@ -560,6 +571,18 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
           <option value="consultant">Consultant / Contractor</option>
         </select>
       </div>
+      <div class="field">
+        <div class="reloc-toggle">
+          <input type="checkbox" id="relocationCheck" onchange="onRelocationToggle()" style="width:14px;height:14px;accent-color:var(--teal);cursor:pointer">
+          <label for="relocationCheck" style="cursor:pointer;font-size:12px;font-weight:600">Include Relocation Allowance</label>
+        </div>
+        <div id="relocationInputRow" class="reloc-input-row" style="display:none">
+          <input type="number" id="relocationCost" value="0" min="0" step="500" oninput="recalcAll()" style="flex:1" placeholder="Total relocation cost">
+          <span class="assump-unit currency-lbl">CAD</span>
+        </div>
+        <div class="hint" id="relocationHint" style="display:none">Added to replacement cost total as a direct budget cost.</div>
+      </div>
+
       <div class="sp-card">
         <div class="sp-card-text">
           <strong>
@@ -685,7 +708,9 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
         </div>
         <div class="r-row"><span class="r-label">Base Salary</span><span class="r-value" id="emp-base">—</span></div>
         <div class="r-row"><span class="r-label">Mandatory Employer Contributions</span><span class="r-value" id="emp-mandatory">—</span></div>
-        <div class="r-row"><span class="r-label">Employer-Sponsored Benefits (est.)</span><span class="r-value" id="emp-benefits">—</span></div>
+        <div class="r-row"><span class="r-label">Employer-Sponsored Benefits</span><span class="r-value" id="emp-benefits">—</span></div>
+        <div class="r-row"><span class="r-label">Health &amp; Wellness Allowance</span><span class="r-value" id="emp-hw">—</span></div>
+        <div class="r-row"><span class="r-label">Professional Development Allowance</span><span class="r-value" id="emp-pd">—</span></div>
         <div class="r-row subtotal"><span class="r-label">Total Annual Employment Cost</span><span class="r-value" id="emp-subtotal">—</span></div>
       </div>
 
@@ -737,35 +762,35 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
 <!-- TAB 3: REPLACEMENT COST -->
 <!-- ============================================================ -->
 <div id="page-replacement" class="page">
+  <!-- Overlap slider card -->
+  <div class="card" style="margin-bottom:18px">
+    <div class="card-header">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      Staff Overlap Period
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Cost of both the departing and incoming employee being on payroll simultaneously during transition.</p>
+    <div class="overlap-row">
+      <label style="font-size:12px;font-weight:600">Overlap Duration</label>
+      <strong id="overlapWeeksLabel" style="color:var(--teal);font-size:14px">0 weeks — no overlap</strong>
+    </div>
+    <input type="range" id="overlapSlider" min="0" max="12" step="1" value="0" oninput="onOverlapInput()" style="width:100%;margin:6px 0 2px">
+    <div class="overlap-labels"><span>0 wks</span><span>3 wks</span><span>6 wks</span><span>9 wks</span><span>12 wks</span></div>
+    <div class="hint" id="overlapCostHint" style="margin-top:6px">Set overlap weeks above to estimate the dual-employment cost.</div>
+  </div>
+
   <div class="grid-2">
     <div>
       <div class="hero hero-red">
         <div class="amount" id="rep-hero-total">$0</div>
         <div class="hero-label">Total Estimated Replacement Cost (<span class="currency-lbl">CAD</span>)</div>
       </div>
-
-      <div class="card" style="margin-bottom:18px">
-        <div class="card-header">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          Recruitment &amp; Pre-Hire
-        </div>
-        <div class="r-row"><span class="r-label">Recruitment Agency Fee</span><span class="r-value" id="rep-agency">—</span></div>
-        <div class="r-row"><span class="r-label">Job Advertising &amp; Platforms</span><span class="r-value" id="rep-ads">—</span></div>
-        <div class="r-row"><span class="r-label">Interview &amp; Staff Time Cost</span><span class="r-value" id="rep-interview">—</span></div>
-        <div class="r-row"><span class="r-label">Background Checks (local rate)</span><span class="r-value" id="rep-bgcheck">—</span></div>
-        <div class="r-row subtotal"><span class="r-label">Sub-total: Recruitment</span><span class="r-value" id="rep-recruit-sub">—</span></div>
+      <!-- Budget Impact card -->
+      <div class="card" style="margin-bottom:18px" id="rep-budget-card">
+        <!-- populated by renderReplacementTab -->
       </div>
-
-      <div class="card">
-        <div class="card-header">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Onboarding &amp; Ramp-up
-        </div>
-        <div class="r-row"><span class="r-label">Onboarding &amp; Training Programme</span><span class="r-value" id="rep-onboard">—</span></div>
-        <div class="r-row"><span class="r-label">Productivity Loss During Ramp-up</span><span class="r-value" id="rep-ramp">—</span></div>
-        <div class="r-row"><span class="r-label">Temporary / Backfill Cover</span><span class="r-value" id="rep-temp">—</span></div>
-        <div class="r-row"><span class="r-label">Knowledge Transfer Loss</span><span class="r-value" id="rep-knowledge">—</span></div>
-        <div class="r-row subtotal"><span class="r-label">Sub-total: Onboarding</span><span class="r-value" id="rep-onboard-sub">—</span></div>
+      <!-- Opportunity Cost card -->
+      <div class="card" id="rep-opp-card">
+        <!-- populated by renderReplacementTab -->
       </div>
     </div>
 
@@ -776,8 +801,8 @@ input:focus,select:focus{outline:none;border-color:var(--charcoal);background:wh
           Scenario Summary
         </div>
         <div class="r-row"><span class="r-label">Base Salary</span><span class="r-value" id="rep-base">—</span></div>
-        <div class="r-row"><span class="r-label">Total Recruitment Sub-total</span><span class="r-value" id="rep-rec-sum">—</span></div>
-        <div class="r-row"><span class="r-label">Total Onboarding Sub-total</span><span class="r-value" id="rep-ob-sum">—</span></div>
+        <div class="r-row"><span class="r-label">Total Budget Impact</span><span class="r-value" id="rep-rec-sum">—</span></div>
+        <div class="r-row"><span class="r-label">Total Opportunity Cost</span><span class="r-value" id="rep-ob-sum">—</span></div>
         <div class="r-row subtotal"><span class="r-label">Grand Total Replacement Cost</span><span class="r-value" id="rep-grand">—</span></div>
         <div class="r-row"><span class="r-label">As % of Annual Salary</span><span class="r-value" id="rep-pct">—</span></div>
       </div>
@@ -1079,30 +1104,58 @@ const BANDS = {
       {id:'BG-11',label:'BG-11',min:2041808,mid:3078004,max:4114200, title:'Head of Unit / Director'},
       {id:'BG-12',label:'BG-12',min:3589898,mid:4440949,max:5292000, title:'Country Director'},
     ]
+  },
+  'Malawi': {
+    system:'BG', currency:'MWK', fx:0.00059,
+    note:'Birches Group · 75th percentile',
+    grades:[
+      {id:'BG-05',label:'BG-05',min:2352000,  mid:3135000,  max:3918000,  title:'Junior Officer'},
+      {id:'BG-06',label:'BG-06',min:3154000,  mid:4207000,  max:5260000,  title:'Officer / Coordinator'},
+      {id:'BG-07',label:'BG-07',min:4108000,  mid:5563000,  max:7019000,  title:'Programme Officer'},
+      {id:'BG-08',label:'BG-08',min:5516000,  mid:7693000,  max:9870000,  title:'Senior Officer / Specialist'},
+      {id:'BG-09',label:'BG-09',min:7291000,  mid:10035000, max:12779000, title:'Manager'},
+      {id:'BG-10',label:'BG-10',min:9961000,  mid:13559000, max:17157000, title:'Senior Manager'},
+      {id:'BG-11',label:'BG-11',min:13645000, mid:18606000, max:23567000, title:'Head of Unit / Director'},
+      {id:'BG-12',label:'BG-12',min:18671000, mid:25455000, max:32240000, title:'Country Director'},
+    ]
   }
 };
 
 const C = {
-  'Canada':      {flag:'🇨🇦',region:'Americas (HQ)',      city:'Ottawa',         currency:'CAD',fx:0.74,     contribs:{'CPP — Canada Pension Plan':5.95,'Employment Insurance (EI)':2.32},                                                                                              benefits:7.0,  bgCheckUSD:250, govtLeavePct:55, noticeDays:60,  coli:100, leave:{maternity:17,parental:63,sick:10,annual:15,longService:0}},
-  'Kenya':       {flag:'🇰🇪',region:'Africa',              city:'Nairobi',        currency:'KES',fx:0.0077,   contribs:{'NSSF':2.0,'SHIF — Social Health Insurance':2.75,'National Housing Development Fund':1.5},                                                                       benefits:4.0,  bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:42,  leave:{maternity:13,parental:2,sick:30,annual:21,longService:0}},
-  'Ethiopia':    {flag:'🇪🇹',region:'Africa',              city:'Addis Ababa',    currency:'ETB',fx:0.0088,   contribs:{'Pension — Employer Contribution':11.0},                                                                                                                           benefits:3.0,  bgCheckUSD:60,  govtLeavePct:0,  noticeDays:30,  coli:28,  leave:{maternity:13,parental:0,sick:6,annual:16,longService:0}},
-  'Nigeria':     {flag:'🇳🇬',region:'Africa',              city:'Abuja',          currency:'NGN',fx:0.00065,  contribs:{'Pension — Pension Reform Act':10.0,'NSITF — Work Injury Insurance':1.0,'ITF — Industrial Training Fund':1.0},                                                   benefits:4.5,  bgCheckUSD:70,  govtLeavePct:0,  noticeDays:30,  coli:30,  leave:{maternity:12,parental:0,sick:12,annual:21,longService:0}},
-  'Senegal':     {flag:'🇸🇳',region:'Africa (Sahel)',      city:'Dakar',          currency:'XOF',fx:0.00163,  contribs:{'IPRES — Pension (General Regime)':8.4,'IPRES — Pension (Executive Regime)':5.6,'CSS — Health & Workplace Accident':7.0,'Family Allowance Fund':7.0},           benefits:3.0,  bgCheckUSD:70,  govtLeavePct:0,  noticeDays:30,  coli:38,  leave:{maternity:14,parental:0,sick:6,annual:24,longService:0}},
-  'Tanzania':    {flag:'🇹🇿',region:'Africa',              city:'Dar es Salaam',  currency:'TZS',fx:0.00039,  contribs:{'NSSF — National Social Security Fund':10.0,'SDL — Skills Development Levy':4.5},                                                                                benefits:3.5,  bgCheckUSD:70,  govtLeavePct:0,  noticeDays:28,  coli:32,  leave:{maternity:13,parental:0,sick:126,annual:28,longService:0}},
-  'India':       {flag:'🇮🇳',region:'Asia (Regional HQ)',  city:'New Delhi',      currency:'INR',fx:0.012,    contribs:{"EPF — Employees' Provident Fund":12.0,"ESI — Employees' State Insurance":3.25,'Gratuity Statutory Provision':4.81},                                              benefits:3.5,  bgCheckUSD:100, govtLeavePct:0,  noticeDays:60,  coli:35,  leave:{maternity:26,parental:0.5,sick:15,annual:15,longService:0}},
-  'Bangladesh':  {flag:'🇧🇩',region:'Asia',                city:'Dhaka',          currency:'BDT',fx:0.0091,   contribs:{'Provident Fund — Employer Contribution':10.0,'Gratuity Statutory Provision':4.17},                                                                              benefits:2.5,  bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:26,  leave:{maternity:16,parental:0,sick:14,annual:10,longService:0}},
-  'Indonesia':   {flag:'🇮🇩',region:'Asia',                city:'Jakarta',        currency:'IDR',fx:0.000062, contribs:{'BPJS JHT — Old Age Security':3.7,'BPJS JP — Pension':2.0,'BPJS Kesehatan — Health':4.0,'BPJS JKK — Work Injury':0.5,'BPJS JK — Life Insurance':0.3},          benefits:3.0,  bgCheckUSD:90,  govtLeavePct:0,  noticeDays:30,  coli:33,  leave:{maternity:13,parental:0,sick:30,annual:12,longService:0}},
-  'Pakistan':    {flag:'🇵🇰',region:'Asia',                city:'Islamabad',      currency:'PKR',fx:0.0036,   contribs:{'EOBI — Old-Age Benefit Institution':5.0,'ESSI — Social Security (Health)':6.0},                                                                                benefits:3.0,  bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:24,  leave:{maternity:12,parental:0,sick:10,annual:14,longService:0}},
-  'Philippines': {flag:'🇵🇭',region:'Asia',                city:'Manila',         currency:'PHP',fx:0.018,    contribs:{'SSS — Social Security System':9.5,'PhilHealth — Health Insurance':2.5,'Pag-IBIG — Housing Fund':2.0},                                                           benefits:3.5,  bgCheckUSD:90,  govtLeavePct:80, noticeDays:30,  coli:37,  leave:{maternity:10.5,parental:1.75,sick:5,annual:5,longService:0}},
+  'Canada':      {flag:'🇨🇦',region:'Americas (HQ)',      city:'Ottawa',         currency:'CAD',fx:0.74,     contribs:{'CPP — Canada Pension Plan':5.95,'Employment Insurance (EI)':2.32},                                                                                              benefits:21.5, bgCheckUSD:250, govtLeavePct:55, noticeDays:60,  coli:100, leave:{maternity:17,parental:63,sick:10,annual:15,longService:0}},
+  'Kenya':       {flag:'🇰🇪',region:'Africa',              city:'Nairobi',        currency:'KES',fx:0.0077,   contribs:{'NSSF':2.0,'SHIF — Social Health Insurance':2.75,'National Housing Development Fund':1.5},                                                                       benefits:12.0, bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:42,  leave:{maternity:13,parental:2,sick:30,annual:21,longService:0}},
+  'Ethiopia':    {flag:'🇪🇹',region:'Africa',              city:'Addis Ababa',    currency:'ETB',fx:0.0088,   contribs:{'Pension — Employer Contribution':11.0},                                                                                                                           benefits:20.0, bgCheckUSD:60,  govtLeavePct:0,  noticeDays:30,  coli:28,  leave:{maternity:13,parental:0,sick:6,annual:16,longService:0}},
+  'Nigeria':     {flag:'🇳🇬',region:'Africa',              city:'Abuja',          currency:'NGN',fx:0.00065,  contribs:{'Pension — Pension Reform Act':10.0,'NSITF — Work Injury Insurance':1.0,'ITF — Industrial Training Fund':1.0},                                                   benefits:20.0, bgCheckUSD:70,  govtLeavePct:0,  noticeDays:30,  coli:30,  leave:{maternity:12,parental:0,sick:12,annual:21,longService:0}},
+  'Senegal':     {flag:'🇸🇳',region:'Africa (Sahel)',      city:'Dakar',          currency:'XOF',fx:0.00163,  contribs:{'IPRES — Pension (General Regime)':8.4,'IPRES — Pension (Executive Regime)':5.6,'CSS — Health & Workplace Accident':7.0,'Family Allowance Fund':7.0},           benefits:19.0, bgCheckUSD:70,  govtLeavePct:0,  noticeDays:30,  coli:38,  leave:{maternity:14,parental:0,sick:6,annual:24,longService:0}},
+  'Tanzania':    {flag:'🇹🇿',region:'Africa',              city:'Dar es Salaam',  currency:'TZS',fx:0.00039,  contribs:{'NSSF — National Social Security Fund':10.0,'SDL — Skills Development Levy':4.5},                                                                                benefits:25.0, bgCheckUSD:70,  govtLeavePct:0,  noticeDays:28,  coli:32,  leave:{maternity:13,parental:0,sick:126,annual:28,longService:0}},
+  'India':       {flag:'🇮🇳',region:'Asia (Regional HQ)',  city:'New Delhi',      currency:'INR',fx:0.012,    contribs:{"EPF — Employees' Provident Fund":12.0,"ESI — Employees' State Insurance":3.25,'Gratuity Statutory Provision':4.81},                                              benefits:76.0, bgCheckUSD:100, govtLeavePct:0,  noticeDays:60,  coli:35,  leave:{maternity:26,parental:0.5,sick:15,annual:15,longService:0}},
+  'Bangladesh':  {flag:'🇧🇩',region:'Asia',                city:'Dhaka',          currency:'BDT',fx:0.0091,   contribs:{'Provident Fund — Employer Contribution':10.0,'Gratuity Statutory Provision':4.17},                                                                              benefits:35.0, bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:26,  leave:{maternity:16,parental:0,sick:14,annual:10,longService:0}},
+  'Indonesia':   {flag:'🇮🇩',region:'Asia',                city:'Jakarta',        currency:'IDR',fx:0.000062, contribs:{'BPJS JHT — Old Age Security':3.7,'BPJS JP — Pension':2.0,'BPJS Kesehatan — Health':4.0,'BPJS JKK — Work Injury':0.5,'BPJS JK — Life Insurance':0.3},          benefits:94.0, bgCheckUSD:90,  govtLeavePct:0,  noticeDays:30,  coli:33,  leave:{maternity:13,parental:0,sick:30,annual:12,longService:0}},
+  'Pakistan':    {flag:'🇵🇰',region:'Asia',                city:'Islamabad',      currency:'PKR',fx:0.0036,   contribs:{'EOBI — Old-Age Benefit Institution':5.0,'ESSI — Social Security (Health)':6.0},                                                                                benefits:29.0, bgCheckUSD:80,  govtLeavePct:0,  noticeDays:30,  coli:24,  leave:{maternity:12,parental:0,sick:10,annual:14,longService:0}},
+  'Philippines': {flag:'🇵🇭',region:'Asia',                city:'Manila',         currency:'PHP',fx:0.018,    contribs:{'SSS — Social Security System':9.5,'PhilHealth — Health Insurance':2.5,'Pag-IBIG — Housing Fund':2.0},                                                           benefits:61.0, bgCheckUSD:90,  govtLeavePct:80, noticeDays:30,  coli:37,  leave:{maternity:10.5,parental:1.75,sick:5,annual:5,longService:0}},
+  'Malawi':      {flag:'🇲🇼',region:'Africa',              city:'Lilongwe',       currency:'MWK',fx:0.00059,  contribs:{'Pension — Employer Contribution':10.0,'MASM — Medical Aid Society':3.0},                                                                                         benefits:15.0, bgCheckUSD:60,  govtLeavePct:0,  noticeDays:30,  coli:20,  leave:{maternity:8,parental:0,sick:30,annual:18,longService:0}},
 };
 
 /* ========================================================
    FX / CURRENCY
    ======================================================== */
-let fxRates = { USD:1, CAD:1.35, EUR:0.91, GBP:0.78, CHF:0.89, KES:130, ETB:114, NGN:1538, XOF:614, TZS:2564, INR:83, BDT:110, IDR:16129, PKR:278, PHP:56 };
+let fxRates = { USD:1, CAD:1.35, EUR:0.91, GBP:0.78, CHF:0.89, KES:130, ETB:114, NGN:1538, XOF:614, TZS:2564, INR:83, BDT:110, IDR:16129, PKR:278, PHP:56, MWK:1700 };
 let fxLastUpdated = 'fallback';
 let displayCurrency = 'CAD';
-const CURRENCY_SYMBOLS = { USD:'$', CAD:'CA$', EUR:'€', GBP:'£', CHF:'CHF ', KES:'KES ', ETB:'ETB ', NGN:'₦', XOF:'CFA ', TZS:'TZS ', INR:'₹', BDT:'৳', IDR:'Rp ', PKR:'Rs ', PHP:'₱' };
+const CURRENCY_SYMBOLS = { USD:'$', CAD:'CA$', EUR:'€', GBP:'£', CHF:'CHF ', KES:'KES ', ETB:'ETB ', NGN:'₦', XOF:'CFA ', TZS:'TZS ', INR:'₹', BDT:'৳', IDR:'Rp ', PKR:'Rs ', PHP:'₱', MWK:'MWK ' };
+
+/* Allowances (canonical CAD amounts) */
+const ALLOWANCE_HW_CAD    = 500;   // Health & Wellness — all staff
+const ALLOWANCE_PD_HQ_CAD = 1500;  // Professional Development — HQ (Canada)
+const ALLOWANCE_PD_REG_CAD= 1200;  // Professional Development — regional / country offices
+
+function cadToUSD(cad){ return cad / (fxRates['CAD'] || 1.35); }
+function isHQ(country){ return country === 'Canada'; }
+function calcAllowances(country){
+  const hw = cadToUSD(ALLOWANCE_HW_CAD);
+  const pd = cadToUSD(isHQ(country) ? ALLOWANCE_PD_HQ_CAD : ALLOWANCE_PD_REG_CAD);
+  return { healthWellness: hw, profDev: pd, total: hw + pd };
+}
 
 function fmt(usdAmount){
   const val = usdAmount * (fxRates[displayCurrency] || 1);
@@ -1119,7 +1172,8 @@ let state = {
   country: 'Canada',
   bandId: 'Band-5',
   salary: 91131,
-  currentLeaveType: 'maternity'
+  currentLeaveType: 'maternity',
+  overlapWeeks: 0
 };
 
 /* ========================================================
@@ -1178,10 +1232,11 @@ function calcEmployment(country, salaryUSD){
   const cd = C[country];
   if(!cd) return {};
   const totalContribPct = Object.values(cd.contribs).reduce((a,b)=>a+b, 0);
-  const contribUSD = salaryUSD * totalContribPct / 100;
-  const benefitsUSD = salaryUSD * cd.benefits / 100;
-  const total = salaryUSD + contribUSD + benefitsUSD;
-  return { salaryUSD, contribUSD, benefitsUSD, total, totalContribPct, cd };
+  const contribUSD   = salaryUSD * totalContribPct / 100;
+  const benefitsUSD  = salaryUSD * cd.benefits / 100;
+  const allowances   = calcAllowances(country);
+  const total = salaryUSD + contribUSD + benefitsUSD + allowances.total;
+  return { salaryUSD, contribUSD, benefitsUSD, allowances, total, totalContribPct, cd };
 }
 
 function calcReplacement(country, salaryUSD){
@@ -1203,12 +1258,27 @@ function calcReplacement(country, salaryUSD){
   const noticeDays  = cd.noticeDays;
   const tempCover   = tempDaily * noticeDays;
 
+  // Relocation (optional)
+  const relocationEl = document.getElementById('relocationCheck');
+  const relocationEnabled = relocationEl ? relocationEl.checked : false;
+  const relocationCost = relocationEnabled ? fromDisp(parseFloat(document.getElementById('relocationCost').value)||0) : 0;
+
+  // Staff overlap (both employees on payroll)
+  const overlapWeeks = parseFloat(document.getElementById('overlapSlider').value) || 0;
+  const overlapCost  = overlapWeeks > 0 ? (emp.total * overlapWeeks / 52) : 0;
+
+  // Budget impact = direct cash from manager's budget
+  const budgetSub = agencyFee + adCost + bgCheck + onboard + relocationCost + overlapCost;
+  // Opportunity cost = real economic cost, not direct cash outlay
+  const oppSub    = interviewCost + prodLoss + tempCover + kLoss;
+
   const recSub  = agencyFee + adCost + interviewCost + bgCheck;
-  const obSub   = onboard + prodLoss + tempCover + kLoss;
+  const obSub   = onboard + prodLoss + tempCover + kLoss + relocationCost + overlapCost;
   const total   = recSub + obSub;
 
   return {agencyFee, adCost, interviewCost, bgCheck, onboard, prodLoss, tempCover, kLoss,
-          recSub, obSub, total, noticeDays, rampMos, tempDaily};
+          relocationCost, overlapCost, overlapWeeks,
+          budgetSub, oppSub, recSub, obSub, total, noticeDays, rampMos, tempDaily};
 }
 
 function calcLeave(country, salaryUSD, leaveType){
@@ -1395,6 +1465,21 @@ function applyDisplayCurrency(code){
 }
 function onCurrencyChange(code){ applyDisplayCurrency(code); }
 
+function onRelocationToggle(){
+  const checked = document.getElementById('relocationCheck').checked;
+  document.getElementById('relocationInputRow').style.display = checked ? 'flex' : 'none';
+  document.getElementById('relocationHint').style.display     = checked ? ''    : 'none';
+  recalcAll();
+}
+
+function onOverlapInput(){
+  const weeks = parseInt(document.getElementById('overlapSlider').value) || 0;
+  state.overlapWeeks = weeks;
+  const lbl = document.getElementById('overlapWeeksLabel');
+  if(lbl) lbl.textContent = weeks === 0 ? '0 weeks — no overlap' : weeks + (weeks === 1 ? ' week' : ' weeks');
+  recalcAll();
+}
+
 async function fetchFXRates(){
   try {
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
@@ -1483,10 +1568,12 @@ function renderEmploymentTab(country, salary, emp){
   setText('emp-hero-total', usd(emp.total));
   setText('emp-hero-country', cd.flag + ' ' + country + ' · ' + cd.city);
 
-  setText('emp-base',     usd(salary));
-  setText('emp-mandatory',usd(emp.contribUSD));
-  setText('emp-benefits', usd(emp.benefitsUSD));
-  setText('emp-subtotal', usd(emp.total));
+  setText('emp-base',       usd(salary));
+  setText('emp-mandatory',  usd(emp.contribUSD));
+  setText('emp-benefits',   usd(emp.benefitsUSD));
+  setText('emp-hw',         usd(emp.allowances.healthWellness));
+  setText('emp-pd',         usd(emp.allowances.profDev));
+  setText('emp-subtotal',   usd(emp.total));
 
   setText('emp-loc',          cd.flag + ' ' + country);
   setText('emp-region',       cd.region);
@@ -1544,19 +1631,54 @@ function renderEmploymentTab(country, salary, emp){
 function renderReplacementTab(country, salary, rep){
   const cd = C[country];
   setText('rep-hero-total', usd(rep.total));
-  setText('rep-agency',     usd(rep.agencyFee));
-  setText('rep-ads',        usd(rep.adCost));
-  setText('rep-interview',  usd(rep.interviewCost));
-  setText('rep-bgcheck',    usd(rep.bgCheck));
-  setText('rep-recruit-sub',usd(rep.recSub));
-  setText('rep-onboard',    usd(rep.onboard));
-  setText('rep-ramp',       usd(rep.prodLoss));
-  setText('rep-temp',       usd(rep.tempCover));
-  setText('rep-knowledge',  usd(rep.kLoss));
-  setText('rep-onboard-sub',usd(rep.obSub));
+
+  // Update overlap hint
+  const oHint = document.getElementById('overlapCostHint');
+  if(oHint){
+    if(rep.overlapWeeks > 0)
+      oHint.textContent = `Overlap cost: ${usd(rep.overlapCost)} (${rep.overlapWeeks} wk${rep.overlapWeeks>1?'s':''} × weekly employment cost)`;
+    else
+      oHint.textContent = 'Set overlap weeks above to estimate the dual-employment cost.';
+  }
+
+  // ── Budget Impact section ──────────────────────────────
+  const budgetCard = document.getElementById('rep-budget-card');
+  if(budgetCard){
+    budgetCard.innerHTML = `
+      <div class="cost-type-hdr cost-type-budget">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Direct Budget Impact <span class="cost-type-badge badge-budget">Manager's budget</span>
+      </div>
+      <div class="r-row"><span class="r-label">Recruitment Agency Fee</span><span class="r-value">${usd(rep.agencyFee)}</span></div>
+      <div class="r-row"><span class="r-label">Job Advertising &amp; Platforms</span><span class="r-value">${usd(rep.adCost)}</span></div>
+      <div class="r-row"><span class="r-label">Background Checks</span><span class="r-value">${usd(rep.bgCheck)}</span></div>
+      <div class="r-row"><span class="r-label">Onboarding &amp; Training Programme</span><span class="r-value">${usd(rep.onboard)}</span></div>
+      ${rep.relocationCost > 0 ? `<div class="r-row"><span class="r-label">Relocation Allowance</span><span class="r-value">${usd(rep.relocationCost)}</span></div>` : ''}
+      ${rep.overlapCost > 0 ? `<div class="r-row"><span class="r-label">Staff Overlap (${rep.overlapWeeks} wk${rep.overlapWeeks>1?'s':''})</span><span class="r-value">${usd(rep.overlapCost)}</span></div>` : ''}
+      <div class="r-row subtotal"><span class="r-label">Sub-total: Budget Impact</span><span class="r-value">${usd(rep.budgetSub)}</span></div>
+    `;
+  }
+
+  // ── Opportunity Cost section ───────────────────────────
+  const oppCard = document.getElementById('rep-opp-card');
+  if(oppCard){
+    oppCard.innerHTML = `
+      <div class="cost-type-hdr cost-type-opp">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Opportunity Cost <span class="cost-type-badge badge-opp">Real cost, not cash outlay</span>
+      </div>
+      <div class="r-row"><span class="r-label">Interview &amp; Staff Time Cost</span><span class="r-value">${usd(rep.interviewCost)}</span></div>
+      <div class="r-row"><span class="r-label">Productivity Loss During Ramp-up</span><span class="r-value">${usd(rep.prodLoss)}</span></div>
+      <div class="r-row"><span class="r-label">Temporary / Backfill Cover</span><span class="r-value">${usd(rep.tempCover)}</span></div>
+      <div class="r-row"><span class="r-label">Knowledge Transfer Loss</span><span class="r-value">${usd(rep.kLoss)}</span></div>
+      <div class="r-row subtotal"><span class="r-label">Sub-total: Opportunity Cost</span><span class="r-value">${usd(rep.oppSub)}</span></div>
+    `;
+  }
+
+  // Scenario Summary
   setText('rep-base',       usd(salary));
-  setText('rep-rec-sum',    usd(rep.recSub));
-  setText('rep-ob-sum',     usd(rep.obSub));
+  setText('rep-rec-sum',    usd(rep.budgetSub));
+  setText('rep-ob-sum',     usd(rep.oppSub));
   setText('rep-grand',      usd(rep.total));
   setText('rep-pct',        pct(rep.total/salary*100));
 
